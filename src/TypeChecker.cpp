@@ -3,33 +3,31 @@
 // --- Utility methods ---
 
 // Map ElementType to DType
-DType TypeChecker::mapDType(ElementType* e) {
-    if (!e) return DType::Unknown;
-    #define MAP(E,T) if (dynamic_cast<const E*>(e)) return DType::T
-    MAP(GenericElementType, Real); 
-    MAP(ElementTypeF16, F16); 
-    MAP(ElementTypeF32, F32); 
-    MAP(ElementTypeF64, F64);
-    MAP(ElementTypeBF16, BF16);
-    MAP(ElementTypeF8E4M3FN, F8E4M3FN); 
-    MAP(ElementTypeF8E5M2, F8E5M2);
-    MAP(ElementTypeF8E4M3FNUZ, F8E4M3FNUZ); 
-    MAP(ElementTypeF8E5M2FNUZ, F8E5M2FNUZ);
-    MAP(ElementTypeF4E2M1, F4E2M1);
-    MAP(ElementTypeI8, I8); 
-    MAP(ElementTypeI16, I16); 
-    MAP(ElementTypeI32, I32); 
-    MAP(ElementTypeI64, I64);
-    MAP(ElementTypeU8, U8); 
-    MAP(ElementTypeU16, U16); 
-    MAP(ElementTypeU32, U32); 
-    MAP(ElementTypeU64, U64);
-    MAP(ElementTypeC64, C64); 
-    MAP(ElementTypeC128, C128);
-    MAP(ElementTypeBool, Bool); 
-    MAP(ElementTypeString, String);
-    #undef MAP
-    return DType::Unknown;
+TDataType TypeChecker::mapDType(ElementType* e) {
+    DType *dt = dynamic_cast<DType *>(e);
+    std::string typeName = dt->variablename_->string_;
+    if (typeName == "Real") return TDataType::Real;
+    else if (typeName == "F16") return TDataType::F16;
+    else if (typeName == "F32") return TDataType::F32;
+    else if (typeName == "F64") return TDataType::F64;
+    else if (typeName == "BF16") return TDataType::BF16;
+    else if (typeName == "F8E4M3FN") return TDataType::F8E4M3FN;
+    else if (typeName == "F8E5M2") return TDataType::F8E5M2;
+    else if (typeName == "F8E4M3FNUZ") return TDataType::F8E4M3FNUZ;
+    else if (typeName == "F8E5M2FNUZ") return TDataType::F8E5M2FNUZ;
+    else if (typeName == "F4E2M1") return TDataType::F4E2M1;
+    else if (typeName == "I8") return TDataType::I8;
+    else if (typeName == "I16") return TDataType::I16;
+    else if (typeName == "I32") return TDataType::I32;
+    else if (typeName == "I64") return TDataType::I64;
+    else if (typeName == "U8") return TDataType::U8;
+    else if (typeName == "U16") return TDataType::U16;
+    else if (typeName == "U32") return TDataType::U32;
+    else if (typeName == "U64") return TDataType::U64;
+    else if (typeName == "C64") return TDataType::C64;
+    else if (typeName == "C128") return TDataType::C128;
+    else if (typeName == "Bool") return TDataType::Bool;
+    else return TDataType::Unknown; // Unknown type
 }
 
 // Map TensorShape to Indices
@@ -91,9 +89,8 @@ static std::string kindToString(SymbolKind kind) {
 // --- Context methods ---
 
 Context::Context(TypeChecker* typeChecker) :
-    currentDataType(DType::Unknown),
+    currentDataType(TDataType::Unknown),
     lastScannedVariable(""),
-    usesOnnxNames(OnnxNamesUsage::Unknown),
     symbolMap(),
     checker(typeChecker) {}
 
@@ -111,6 +108,7 @@ bool Context::addSymbol(VariableName *name, ElementType *type, ListNumber shape,
     }
 
     Indices tmp;
+    TDataType dtype = TypeChecker::mapDType(type);
     
     // Convert shape dimensions to integers for validation
     for (const auto& dim : shape) {
@@ -136,7 +134,7 @@ bool Context::addSymbol(VariableName *name, ElementType *type, ListNumber shape,
     symbolMap.try_emplace(
         name->string_,
         name->string_,
-        TypeChecker::mapDType(type),
+        dtype,
         std::move(tmp),
         kind,
         onnxName
@@ -172,9 +170,13 @@ std::string Diagnostic::codeToString() const {
             case ErrorCode::IndexOutOfBounds: return "IndexOutOfBounds";
             case ErrorCode::TooManyIndices: return "TooManyIndices";
             case ErrorCode::NotEnoughIndices: return "NotEnoughIndices";
-            case ErrorCode::UnexpectedOnnxName: return "UnexpectedOnnxName";
             case ErrorCode::InvalidDimensions: return "InvalidDimensions";
+            case ErrorCode::MajorVersionMismatch: return "MajorVersionMismatch";
+            case ErrorCode::VariableCountMismatch: return "VariableCountMismatch";
+            case ErrorCode::VariableShapeMismatch: return "VariableShapeMismatch";
+            case ErrorCode::VariableKindMismatch: return "VariableKindMismatch";
             case ErrorCode::MissingNetwork: return "MissingNetwork";
+            case ErrorCode::UnknownType: return "UnknownType";
             default: break;
         }
     } else if (severity_ == Severity::Warning) {
@@ -255,92 +257,34 @@ void TypeChecker::visitTensorDims(TensorDims *p) {
 
 void TypeChecker::visitArithExpr(ArithExpr *p) {} // abstract class
 
-void TypeChecker::visitVarExpr(VarExpr *p) {
-    const SymbolInfo *symbol = ctx->getSymbol(*p->variablename_);
-    if (!symbol) {
-        addDiagnostic(
-            Severity::Error,
-            static_cast<int>(ErrorCode::UndeclaredVariable),
-            "Undeclared variable",
-            p->variablename_->string_,
-            "Variable must be declared before use.",
-            p->variablename_->integer_
-        );
-        return;
-    }
-    // Check for valid tensor access
-    visitTensorElement(p->variablename_, TypeChecker::mapIndices(p->listnumber_));
-    // Check for valid variable name
+void TypeChecker::visitScalarVarExpr(ScalarVarExpr* p) {
+    validateVariableAccess(p->variablename_);
+    validateTensorIndexing(p->variablename_, {}); // Scalars have no indices
     p->variablename_->accept(this);
+}
 
-    DType nodeType = symbol->dtype;
-    DType exprType = ctx->currentDataType;
-
-    if (exprType == DType::Unknown) {
-        ctx->currentDataType = nodeType;
-        ctx->lastScannedVariable = p->variablename_->string_;
-    }
-    // if exprType is a constant type, check if nodeType is of the same family. E.g., Float and Float
-    else if (isConstant(exprType)) {
-        if (sameFamily(nodeType, exprType)) {
-            ctx->currentDataType = nodeType;
-            ctx->lastScannedVariable = p->variablename_->string_;
-        } else {
-            addDiagnostic(
-                Severity::Error,
-                static_cast<int>(ErrorCode::TypeMismatch),
-                "Type mismatch in arithmetic expression",
-                p->variablename_->string_,
-                string_format(
-                    "Expected a %s type to match constant '%s', but variable '%s' has type '%s'.",
-                    dtypeToString(exprType).c_str(),
-                    ctx->lastScannedVariable.c_str(),
-                    p->variablename_->string_.c_str(),
-                    dtypeToString(nodeType).c_str()
-                ),
-                p->variablename_->integer_
-            );
-        }
-    }
-    // if exprType is a variable type, check if nodeType is of the same type
-    else if (!sameType(exprType, nodeType)) {
-        addDiagnostic(
-            Severity::Error,
-            static_cast<int>(ErrorCode::TypeMismatch),
-            "Type mismatch in arithmetic expression",
-            p->variablename_->string_,
-            string_format(
-                "Expected type '%s' (from variable '%s'), but variable '%s' has type '%s'.",
-                dtypeToString(exprType).c_str(), 
-                ctx->lastScannedVariable.c_str(),
-                p->variablename_->string_.c_str(),
-                dtypeToString(nodeType).c_str()
-            ),
-            p->variablename_->integer_
-        );
-    }
-    else {
-        ctx->currentDataType = nodeType;
-        ctx->lastScannedVariable = p->variablename_->string_;
-    }
+void TypeChecker::visitTensorVarExpr(TensorVarExpr* p) {
+    validateVariableAccess(p->variablename_);
+    validateTensorIndexing(p->variablename_, TypeChecker::mapIndices(p->listnumber_));
+    p->variablename_->accept(this);
 }
 
 void TypeChecker::visitValExpr(ValExpr *p) {
     // If currentDataType is unset, assign a new FloatConstant
     std::string valTok = p->number_->string_;
-    DType newType = DType::Unknown;
+    TDataType newType = TDataType::Unknown;
 
     if (valTok.find('.') != std::string::npos) {
-        newType = DType::FloatConstant;
+        newType = TDataType::FloatConstant;
     } else {
         if (valTok.find('-') != std::string::npos) {
-            newType = DType::NegativeIntConstant;
+            newType = TDataType::NegativeIntConstant;
         } else {
-            newType = DType::PositiveIntConstant;
+            newType = TDataType::PositiveIntConstant;
         }
     }
 
-    if (ctx->currentDataType == DType::Unknown) {
+    if (ctx->currentDataType == TDataType::Unknown) {
         ctx->currentDataType = newType;
         ctx->lastScannedVariable = valTok;
     // if the currentDataType is incompatible with the constant type, add error
@@ -389,37 +333,37 @@ void TypeChecker::visitListArithExpr(ListArithExpr *p) {
 void TypeChecker::visitBoolExpr(BoolExpr *p) {} // abstract class
 
 void TypeChecker::visitGreaterThan(GreaterThan *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
 
 void TypeChecker::visitLessThan(LessThan *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
 
 void TypeChecker::visitGreaterEqual(GreaterEqual *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
 
 void TypeChecker::visitLessEqual(LessEqual *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
 
 void TypeChecker::visitNotEqual(NotEqual *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
 
 void TypeChecker::visitEqual(Equal *p) {
-    ctx->currentDataType = DType::Unknown;
+    ctx->currentDataType = TDataType::Unknown;
     p->arithexpr_1->accept(this);
     p->arithexpr_2->accept(this);
 }
@@ -450,30 +394,13 @@ void TypeChecker::visitListAssertion(ListAssertion *p) {
     }
 }
 
-// Data Type leaf node visitors
-void TypeChecker::visitElementType(ElementType *p) {}
-void TypeChecker::visitGenericElementType(GenericElementType *p) {}
-void TypeChecker::visitElementTypeF16(ElementTypeF16 *p) {}
-void TypeChecker::visitElementTypeF32(ElementTypeF32 *p) {}
-void TypeChecker::visitElementTypeF64(ElementTypeF64 *p) {}
-void TypeChecker::visitElementTypeBF16(ElementTypeBF16 *p) {}
-void TypeChecker::visitElementTypeF8E4M3FN(ElementTypeF8E4M3FN *p) {}
-void TypeChecker::visitElementTypeF8E5M2(ElementTypeF8E5M2 *p) {}
-void TypeChecker::visitElementTypeF8E4M3FNUZ(ElementTypeF8E4M3FNUZ *p) {}
-void TypeChecker::visitElementTypeF8E5M2FNUZ(ElementTypeF8E5M2FNUZ *p) {}
-void TypeChecker::visitElementTypeF4E2M1(ElementTypeF4E2M1 *p) {}
-void TypeChecker::visitElementTypeI8(ElementTypeI8 *p) {}
-void TypeChecker::visitElementTypeI16(ElementTypeI16 *p) {}
-void TypeChecker::visitElementTypeI32(ElementTypeI32 *p) {}
-void TypeChecker::visitElementTypeI64(ElementTypeI64 *p) {}
-void TypeChecker::visitElementTypeU8(ElementTypeU8 *p) {}
-void TypeChecker::visitElementTypeU16(ElementTypeU16 *p) {}
-void TypeChecker::visitElementTypeU32(ElementTypeU32 *p) {}
-void TypeChecker::visitElementTypeU64(ElementTypeU64 *p) {}
-void TypeChecker::visitElementTypeC64(ElementTypeC64 *p) {} 
-void TypeChecker::visitElementTypeC128(ElementTypeC128 *p) {} 
-void TypeChecker::visitElementTypeBool(ElementTypeBool *p) {}
-void TypeChecker::visitElementTypeString(ElementTypeString *p) {}
+void TypeChecker::visitElementType(ElementType *p) {}   // abstract class
+
+void TypeChecker::visitOnnxName(OnnxName *p) {} // abstract class
+
+void TypeChecker::visitNodeName(NodeName *p) {}
+
+void TypeChecker::visitDType(DType *p) {}
 
 void TypeChecker::visitInputDefinition(InputDefinition *p) {} // abstract class
 
@@ -481,6 +408,7 @@ void TypeChecker::visitInputDef(InputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
+    p->elementtype_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     // Set dims to an empty list if shape is null or shape->listnumber_ is null
@@ -494,31 +422,16 @@ void TypeChecker::visitInputDef(InputDef *p) {
     );
 }
 
-void TypeChecker::visitInputOnnxDef(InputOnnxDef *p) {
-    visitVariableName(p->variablename_);
-    p->elementtype_->accept(this);
-    p->tensorshape_->accept(this);
-
-    std::string onnxName = p->string_;
-    auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
-    ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
-
-    ctx->addSymbol(
-        p->variablename_,
-        p->elementtype_,
-        dims,
-        SymbolKind::Input,
-        onnxName);
-}
-
 void TypeChecker::visitHiddenDefinition(HiddenDefinition *p) {} // abstract class
 
 void TypeChecker::visitHiddenDef(HiddenDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
+    p->elementtype_->accept(this);
 
-    std::string onnxName = p->string_;  // Hidden nodes have a mandatory ONNX name
+    NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
+    std::string onnxNameStr = onnxName->string_;
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
 
@@ -527,7 +440,7 @@ void TypeChecker::visitHiddenDef(HiddenDef *p) {
         p->elementtype_,
         dims,
         SymbolKind::Hidden,
-        onnxName
+        onnxNameStr
     );
 }
 
@@ -537,6 +450,7 @@ void TypeChecker::visitOutputDef(OutputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
+    p->elementtype_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
@@ -549,61 +463,10 @@ void TypeChecker::visitOutputDef(OutputDef *p) {
     );
 }
 
-void TypeChecker::visitOutputOnnxDef(OutputOnnxDef *p) {
-    visitVariableName(p->variablename_);
-    p->elementtype_->accept(this);
-    p->tensorshape_->accept(this);
-
-    std::string onnxName = p->string_;
-    auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
-    ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
-
-    ctx->addSymbol(
-        p->variablename_,
-        p->elementtype_,
-        dims,
-        SymbolKind::Output,
-        onnxName);
-}
-
 void TypeChecker::visitListInputDefinition(ListInputDefinition *listinputdefinition)
 {
     for (auto &inputDef : *listinputdefinition) {
         inputDef->accept(this);
-        switch (ctx->usesOnnxNames) {
-            case OnnxNamesUsage::Unknown:
-                if (dynamic_cast<InputOnnxDef*>(inputDef)) {
-                    ctx->usesOnnxNames = OnnxNamesUsage::OnnxNamesUsed;
-                } else {
-                    ctx->usesOnnxNames = OnnxNamesUsage::OnnxNamesNotUsed;
-                }
-                break;
-            case OnnxNamesUsage::OnnxNamesNotUsed:
-                // Check if inputDef is an ONNX-named input variable
-                if (auto p = dynamic_cast<InputOnnxDef*>(inputDef)) {
-                    addDiagnostic(
-                        Severity::Error,
-                        static_cast<int>(ErrorCode::UnexpectedOnnxName),
-                        "Expected ordered input variables but got an ONNX-named input variable.",
-                        p->variablename_->string_,
-                        "ONNX names are used in this context, but this input definition does not specify one.",
-                        p->variablename_->integer_
-                    );
-                }
-                break;
-            case OnnxNamesUsage::OnnxNamesUsed:
-                // Check if inputDef is an ordered input variable
-                if (auto p = dynamic_cast<InputDef*>(inputDef)) {
-                    addDiagnostic(
-                        Severity::Error,
-                        static_cast<int>(ErrorCode::UnexpectedOnnxName),
-                        "Expected ONNX-named input variable but got an ordered input variable",
-                        p->variablename_->string_,
-                        "All (input/output) variables for a network must have an ONNX name OR no (input/output) variables may have an ONNX name.",
-                        p->variablename_->integer_
-                    );
-                }
-        }
     }
 }
 
@@ -618,44 +481,10 @@ void TypeChecker::visitListOutputDefinition(ListOutputDefinition *listoutputdefi
 {
     for (auto &outputDef : *listoutputdefinition) {
         outputDef->accept(this);
-        switch (ctx->usesOnnxNames) {
-            case OnnxNamesUsage::Unknown:
-                if (dynamic_cast<OutputOnnxDef*>(outputDef)) {
-                    ctx->usesOnnxNames = OnnxNamesUsage::OnnxNamesUsed;
-                } else {
-                    ctx->usesOnnxNames = OnnxNamesUsage::OnnxNamesNotUsed;
-                }
-                break;
-            case OnnxNamesUsage::OnnxNamesNotUsed:
-                // Check if outputDef is an ONNX-named output variable
-                if (auto p = dynamic_cast<OutputOnnxDef*>(outputDef)) {
-                    addDiagnostic(
-                        Severity::Error,
-                        static_cast<int>(ErrorCode::UnexpectedOnnxName),
-                        "Expected ordered output variables but got an ONNX-named output variable.",
-                        p->variablename_->string_,
-                        "ONNX names are used in this context, but this output definition does not specify one.",
-                        p->variablename_->integer_
-                    );
-                }
-                break;
-            case OnnxNamesUsage::OnnxNamesUsed:
-                // Check if outputDef is an ordered output variable
-                if (auto p = dynamic_cast<OutputDef*>(outputDef)) {
-                    addDiagnostic(
-                        Severity::Error,
-                        static_cast<int>(ErrorCode::UnexpectedOnnxName),
-                        "Expected ONNX-named output variable but got an ordered output variable",
-                        p->variablename_->string_,
-                        "All (input/output) variables for a network must have an ONNX name OR no (input/output) variables may have an ONNX name.",
-                        p->variablename_->integer_
-                    );
-                }
-        }
     }
 }
 
-void TypeChecker::visitCompStm(CompStm *p) {} // abstract base class
+void TypeChecker::visitNetworkEquivalence(NetworkEquivalence *p) {} // abstract base class
 
 void TypeChecker::visitIsomorphicTo(IsomorphicTo *p) {
     validateNetworkCongruence(p->variablename_, "isomorphic-to");
@@ -665,16 +494,15 @@ void TypeChecker::visitEqualTo(EqualTo *p) {
     validateNetworkCongruence(p->variablename_, "equal-to");
 }
 
-void TypeChecker::visitListCompStm(ListCompStm *p) {
-    for (auto &compStm : *p) {
-        compStm->accept(this);
+void TypeChecker::visitListNetworkEquivalence(ListNetworkEquivalence *p) {
+    for (auto &networkEquivalence : *p) {
+        networkEquivalence->accept(this);
     }
 }
 
 void TypeChecker::visitNetworkDefinition(NetworkDefinition *p) {} // abstract base class
 
 void TypeChecker::visitNetworkDef(NetworkDef *p) {
-    ctx->usesOnnxNames = OnnxNamesUsage::Unknown;
     currentNetworkName = p->variablename_->string_;
     
     visitVariableName(p->variablename_);
@@ -685,11 +513,9 @@ void TypeChecker::visitNetworkDef(NetworkDef *p) {
     // Store network information for later validation
     NetworkInfo networkInfo;
     networkInfo.name = currentNetworkName;
-    networkInfo.usesOnnxNames = (ctx->usesOnnxNames == OnnxNamesUsage::OnnxNamesUsed);
     collectNetworkVariables(networkInfo, p->listinputdefinition_, p->listoutputdefinition_);
     networks[currentNetworkName] = networkInfo;
-
-    visitListCompStm(p->listcompstm_);
+    visitListNetworkEquivalence(p->listnetworkequivalence_);
 }
 
 void TypeChecker::visitListNetworkDefinition(ListNetworkDefinition *listnetworkdefinition)
@@ -733,19 +559,11 @@ void TypeChecker::visitQuery(Query *p) {} // abstract base class
 
 void TypeChecker::visitVNNLibQuery(VNNLibQuery *p) {
     assert(p->version_); p->version_->accept(this);
-    if (p->listnetworkdefinition_) {
-        p->listnetworkdefinition_->accept(this);
-    } else {
-        addDiagnostic(
-            Severity::Error,
-            static_cast<int>(ErrorCode::MissingNetwork),
-            "No network definition found in VNNLib specification",
-            "",
-            "A VNNLib specification must contain at least one network definition."
-        );
-    }
+    p->listnetworkdefinition_->accept(this);
     assert(p->listassertion_); p->listassertion_->accept(this);
 }
+
+// --- Helper Methods for Validation ---
 
 // Helper function to efficiently create strings to represent tensor element access
 std::string make_element(std::string_view name, const Indices& indices) {
@@ -769,26 +587,22 @@ std::string make_element(std::string_view name, const Indices& indices) {
 }
 
 // Checks for valid tensor element access
-void TypeChecker::visitTensorElement(VariableName *name, Indices indices) {
+void TypeChecker::validateTensorIndexing(VariableName *name, Indices indices) {
     const SymbolInfo *symbol = ctx->getSymbol(*name);
     std::string name_str = name->string_;
     std::string element_str = make_element(name_str, indices);
 
-    if (symbol->shape.size() == 0) {
-        // For scalars (empty shape), allow access with index [0] only
-        if (indices.size() == 1 && indices[0] == 0) {
-            return;  // Correct access
-        } else {
-            addDiagnostic(
-                Severity::Error,
-                static_cast<int>(ErrorCode::InvalidScalarAccess),
-                "Invalid index for scalar variable",
-                element_str,
-                "Scalar variables can only be accessed with index [0].",
-                name->integer_
-            );
-            return;
-        }
+    if (symbol->shape.size() == 0 && !indices.empty()) {
+        // For scalars (empty shape), do not allow any indexing
+        addDiagnostic(
+            Severity::Error,
+            static_cast<int>(ErrorCode::InvalidScalarAccess),
+            "Invalid indexing for scalar variable.",
+            element_str,
+            "Scalar variables cannot be indexed.",
+            name->integer_
+        );
+        return;
     }
 
     for (size_t i = 0; i < indices.size(); ++i) {
@@ -834,24 +648,71 @@ void TypeChecker::visitTensorElement(VariableName *name, Indices indices) {
     }
 }
 
-// Visitors for default BNFC tokens
-void TypeChecker::visitInteger(Integer x) {}
-void TypeChecker::visitChar(Char x) {}
-void TypeChecker::visitDouble(Double x) {}
-void TypeChecker::visitString(String x) {}
-void TypeChecker::visitIdent(Ident x) {}
-void TypeChecker::visitVariableName(VariableName *p) {}     // Token for variable names
+// Validate variable use in arithmetic expressions
+void TypeChecker::validateVariableAccess(const VariableName* name) {
+    const SymbolInfo *symbol = ctx->getSymbol(*name);
+    if (!symbol) {
+        addDiagnostic(
+            Severity::Error,
+            static_cast<int>(ErrorCode::UndeclaredVariable),
+            "Undeclared variable",
+            name->string_,
+            "Variable must be declared before use.",
+            name->integer_
+        );
+    }
 
-void TypeChecker::visitListNumber(ListNumber *p) {
-    for (const auto &num : *p) {
-        num->accept(this);
+    TDataType nodeType = symbol->dtype;
+    TDataType exprType = ctx->currentDataType;
+
+    if (exprType == TDataType::Unknown) {
+        ctx->currentDataType = nodeType;
+        ctx->lastScannedVariable = name->string_;
+    }
+    // if exprType is a constant type, check if nodeType is of the same family. E.g., Float and Float
+    else if (isConstant(exprType)) {
+        if (sameFamily(nodeType, exprType)) {
+            ctx->currentDataType = nodeType;
+            ctx->lastScannedVariable = name->string_;
+        } else {
+            addDiagnostic(
+                Severity::Error,
+                static_cast<int>(ErrorCode::TypeMismatch),
+                "Type mismatch in arithmetic expression",
+                name->string_,
+                string_format(
+                    "Expected a %s type to match constant '%s', but variable '%s' has type '%s'.",
+                    dtypeToString(exprType).c_str(),
+                    ctx->lastScannedVariable.c_str(),
+                    name->string_.c_str(),
+                    dtypeToString(nodeType).c_str()
+                ),
+                name->integer_
+            );
+        }
+    }
+    // if exprType is a variable type, check if nodeType is of the same type
+    else if (!sameType(exprType, nodeType)) {
+        addDiagnostic(
+            Severity::Error,
+            static_cast<int>(ErrorCode::TypeMismatch),
+            "Type mismatch in arithmetic expression",
+            name->string_,
+            string_format(
+                "Expected type '%s' (from variable '%s'), but variable '%s' has type '%s'.",
+                dtypeToString(exprType).c_str(), 
+                ctx->lastScannedVariable.c_str(),
+                name->string_.c_str(),
+                dtypeToString(nodeType).c_str()
+            ),
+            name->integer_
+        );
+    }
+    else {
+        ctx->currentDataType = nodeType;
+        ctx->lastScannedVariable = name->string_;
     }
 }
-
-void TypeChecker::visitNumber(Number *p) {}                 // Token for number literals
-
-void TypeChecker::visitVersionToken(VersionToken *x) {}     // Token for version
-
 
 // Helper method to validate whether two networks are congruent (isometric or equal graphs)
 void TypeChecker::validateNetworkCongruence(VariableName* referencedNetworkName, const std::string& statementType) {
@@ -881,44 +742,30 @@ void TypeChecker::validateNetworkCongruence(VariableName* referencedNetworkName,
     }
 }
 
-
 // Helper method to collect network input and output variables
 void TypeChecker::collectNetworkVariables(NetworkInfo& networkInfo, const ListInputDefinition* inputs, const ListOutputDefinition* outputs) {
     // Collect input variables
     for (auto input : *inputs) {
-        if (auto inputDef = dynamic_cast<InputDef*>(input)) {
-            SymbolInfo* symbol = ctx->getSymbol(*inputDef->variablename_);
-            if (symbol) {
-                networkInfo.vars.push_back(symbol);
-            }
-        } else if (auto inputOnnxDef = dynamic_cast<InputOnnxDef*>(input)) {
-            SymbolInfo* symbol = ctx->getSymbol(*inputOnnxDef->variablename_);
-            if (symbol) {
-                networkInfo.vars.push_back(symbol);
-            }
+        auto inputDef = dynamic_cast<InputDef*>(input); 
+        SymbolInfo* symbol = ctx->getSymbol(*inputDef->variablename_);
+        if (symbol) {
+            networkInfo.vars.push_back(symbol);
         }
     }
     
     // Collect output variables
     for (auto output : *outputs) {
-        if (auto outputDef = dynamic_cast<OutputDef*>(output)) {
-            SymbolInfo* symbol = ctx->getSymbol(*outputDef->variablename_);
-            if (symbol) {
-                networkInfo.vars.push_back(symbol);
-            }
-        } else if (auto outputOnnxDef = dynamic_cast<OutputOnnxDef*>(output)) {
-            SymbolInfo* symbol = ctx->getSymbol(*outputOnnxDef->variablename_);
-            if (symbol) {
-                networkInfo.vars.push_back(symbol);
-            }
+        auto outputDef = dynamic_cast<OutputDef*>(output);
+        SymbolInfo* symbol = ctx->getSymbol(*outputDef->variablename_);
+        if (symbol) {
+            networkInfo.vars.push_back(symbol);
         }
     }
 }
 
-
-// Helper method to compare the variables of two networks for congruence
+// Helper method to compare the input/output variables of two networks for congruence
 bool TypeChecker::areVariablesCongruent(const NetworkInfo& current, const NetworkInfo& target, int line) {
-    // Check if the number of variables matches
+    // Check if the variable counts match
     if (current.vars.size() != target.vars.size()) {
         addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::VariableCountMismatch),
                     string_format("Number of variables mismatch between networks '%s' and '%s'",
@@ -929,48 +776,7 @@ bool TypeChecker::areVariablesCongruent(const NetworkInfo& current, const Networ
         return false;
     }
     
-    // For ordered variables, check each variable pair for type and shape compatibility
-    if (current.usesOnnxNames != target.usesOnnxNames) {
-        addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::UnexpectedOnnxName),
-                    string_format("Variable naming convention mismatch between networks '%s' and '%s'",
-                                  current.name.c_str(), target.name.c_str()),
-                    target.name,
-                    "To assert congruence, both networks must either the same ONNX naming convention (all or none)",
-                    line);
-        return false;
-    }
-
-    // If ONNX names are used, match variables by ONNX name
-    if (current.usesOnnxNames) {
-        for (size_t i = 0; i < current.vars.size(); ++i) {
-            const SymbolInfo* sym1 = current.vars[i];
-            const SymbolInfo* sym2 = nullptr;
-            // Find the corresponding variable in the target network by ONNX name. Let's make this more efficient later.
-            for (const auto& targetSym : target.vars) {
-                if (sym1->onnxName == targetSym->onnxName) {
-                    sym2 = targetSym;
-                    break;
-                }
-            }
-
-            if (sym2 == nullptr) {
-                addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::OnnxNameMismatch),
-                            string_format("ONNX name '%s' not found in target network '%s'",
-                                          sym1->onnxName.c_str(), target.name.c_str()),
-                            target.name,
-                            "Ensure corresponding variables have matching ONNX names",
-                            line);
-                return false;
-            }
-
-            if (!validateSymbolCongruence(*sym1, *sym2, current, target, i, line)) {
-                return false;
-            }
-        }
-        return true; // Skip the ordered check if ONNX names are used
-    }
-
-    // If ordered variables are used, match variables by position
+    // Match variables by position
     for (size_t i = 0; i < current.vars.size(); ++i) {
         const SymbolInfo* sym1 = current.vars[i];
         const SymbolInfo* sym2 = target.vars[i];
@@ -982,7 +788,7 @@ bool TypeChecker::areVariablesCongruent(const NetworkInfo& current, const Networ
     return true;
 }
 
-
+// Helper method to validate congruence of two symbols (variables)
 bool TypeChecker::validateSymbolCongruence(const SymbolInfo& sym1, const SymbolInfo& sym2, 
     const NetworkInfo& current, const NetworkInfo& target, size_t i, int line) {
     // Check kind compatibility (input vs output)
@@ -997,7 +803,6 @@ bool TypeChecker::validateSymbolCongruence(const SymbolInfo& sym1, const SymbolI
         return false;
     }
     
-    // Check data type compatibility
     if (sym1.dtype != sym2.dtype) {
         addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::TypeMismatch),
                         string_format("Type mismatch for variable number %d between networks '%s' and '%s'",
@@ -1009,7 +814,6 @@ bool TypeChecker::validateSymbolCongruence(const SymbolInfo& sym1, const SymbolI
         return false;
     }
 
-    // Check shape compatibility
     if (sym1.shape != sym2.shape) {
         addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::VariableShapeMismatch),
                         string_format("Shape mismatch for variable number %d between networks '%s' and '%s'",
@@ -1022,3 +826,21 @@ bool TypeChecker::validateSymbolCongruence(const SymbolInfo& sym1, const SymbolI
     
     return true;
 }
+
+// Visitors for BNFC tokens
+void TypeChecker::visitInteger(Integer x) {}
+void TypeChecker::visitChar(Char x) {}
+void TypeChecker::visitDouble(Double x) {}
+void TypeChecker::visitString(String x) {}
+void TypeChecker::visitIdent(Ident x) {}
+void TypeChecker::visitVariableName(VariableName *p) {}     // Token for variable names
+
+void TypeChecker::visitListNumber(ListNumber *p) {
+    for (const auto &num : *p) {
+        num->accept(this);
+    }
+}
+
+void TypeChecker::visitNumber(Number *p) {}                 // Token for number literals
+
+void TypeChecker::visitVersionToken(VersionToken *x) {}     // Token for version

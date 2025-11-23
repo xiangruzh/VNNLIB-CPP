@@ -20,7 +20,8 @@ public:
     void visitScalarDims(ScalarDims *p) override;
     void visitTensorDims(TensorDims *p) override;
 
-    void visitVarExpr(VarExpr* p) override;
+    void visitScalarVarExpr(ScalarVarExpr* p) override;
+    void visitTensorVarExpr(TensorVarExpr* p) override;
     void visitValExpr(ValExpr* p) override;
     void visitNegate(Negate* p) override;
     void visitPlus(Plus* p) override;
@@ -39,10 +40,8 @@ public:
     void visitAssert(Assert* p) override;
 
     void visitInputDef(InputDef* p) override;
-    void visitInputOnnxDef(InputOnnxDef* p) override;
     void visitHiddenDef(HiddenDef* p) override;
     void visitOutputDef(OutputDef* p) override;
-    void visitOutputOnnxDef(OutputOnnxDef* p) override;
 
     void visitIsomorphicTo(IsomorphicTo *p) override;
     void visitEqualTo(EqualTo *p) override;
@@ -52,28 +51,7 @@ public:
 
     // --- Visitor methods for element types ---
 
-    void visitGenericElementType(GenericElementType *p) override;
-    void visitElementTypeF16(ElementTypeF16 *p) override;
-    void visitElementTypeF32(ElementTypeF32 *p) override;
-    void visitElementTypeF64(ElementTypeF64 *p) override;
-    void visitElementTypeBF16(ElementTypeBF16 *p) override;
-    void visitElementTypeF8E4M3FN(ElementTypeF8E4M3FN *p) override;
-    void visitElementTypeF8E5M2(ElementTypeF8E5M2 *p) override;
-    void visitElementTypeF8E4M3FNUZ(ElementTypeF8E4M3FNUZ *p) override;
-    void visitElementTypeF8E5M2FNUZ(ElementTypeF8E5M2FNUZ *p) override;
-    void visitElementTypeF4E2M1(ElementTypeF4E2M1 *p) override;
-    void visitElementTypeI8(ElementTypeI8 *p) override;
-    void visitElementTypeI16(ElementTypeI16 *p) override;
-    void visitElementTypeI32(ElementTypeI32 *p) override;
-    void visitElementTypeI64(ElementTypeI64 *p) override;
-    void visitElementTypeU8(ElementTypeU8 *p) override;
-    void visitElementTypeU16(ElementTypeU16 *p) override;
-    void visitElementTypeU32(ElementTypeU32 *p) override;
-    void visitElementTypeU64(ElementTypeU64 *p) override;
-    void visitElementTypeC64(ElementTypeC64 *p) override;
-    void visitElementTypeC128(ElementTypeC128 *p) override;
-    void visitElementTypeBool(ElementTypeBool *p) override;
-    void visitElementTypeString(ElementTypeString *p) override;
+    void visitDType(DType *p) override;
 
     // --- Visitor methods for list types ---
 
@@ -84,7 +62,7 @@ public:
     void visitListInputDefinition(ListInputDefinition *p) override;
     void visitListHiddenDefinition(ListHiddenDefinition *p) override;
     void visitListOutputDefinition(ListOutputDefinition *p) override;
-    void visitListCompStm(ListCompStm *p) override;
+    void visitListNetworkEquivalence(ListNetworkEquivalence *p) override;
     void visitListNetworkDefinition(ListNetworkDefinition *p) override;
 
     // --- Visitor methods for tokens ---

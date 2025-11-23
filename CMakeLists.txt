@@ -47,7 +47,7 @@ include_directories(
 # BNFC generation
 # ------------------------------------------------------------
 
-set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/syntax.cf)
+set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
 
 add_custom_command(
     OUTPUT
@@ -57,8 +57,8 @@ add_custom_command(
         ${GENERATED_DIR}/Printer.H
         ${GENERATED_DIR}/Buffer.C
         ${GENERATED_DIR}/Buffer.H
-        ${GENERATED_DIR}/syntax.y
-        ${GENERATED_DIR}/syntax.l
+        ${GENERATED_DIR}/grammar.y
+        ${GENERATED_DIR}/grammar.l
         ${GENERATED_DIR}/Parser.H
         ${GENERATED_DIR}/ParserError.H
         ${GENERATED_DIR}/Skeleton.C
@@ -79,8 +79,8 @@ add_custom_target(BNFCGen
         ${GENERATED_DIR}/Printer.H
         ${GENERATED_DIR}/Buffer.C
         ${GENERATED_DIR}/Buffer.H
-        ${GENERATED_DIR}/syntax.y
-        ${GENERATED_DIR}/syntax.l
+        ${GENERATED_DIR}/grammar.y
+        ${GENERATED_DIR}/grammar.l
         ${GENERATED_DIR}/Parser.H
         ${GENERATED_DIR}/ParserError.H
         ${GENERATED_DIR}/Skeleton.C
@@ -98,19 +98,19 @@ find_package(FLEX REQUIRED)
 # Custom commands for Bison and Flex (similar to Makefile approach)
 add_custom_command(
     OUTPUT ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Bison.H
-    COMMAND ${BISON_EXECUTABLE} -t -psyntax_ -d ${GENERATED_DIR}/syntax.y -o ${GENERATED_DIR}/Parser.C
-    DEPENDS ${GENERATED_DIR}/syntax.y BNFCGen
+    COMMAND ${BISON_EXECUTABLE} -t -pgrammar_ -d ${GENERATED_DIR}/grammar.y -o ${GENERATED_DIR}/Parser.C
+    DEPENDS ${GENERATED_DIR}/grammar.y BNFCGen
     WORKING_DIRECTORY ${GENERATED_DIR}
-    COMMENT "Running Bison on syntax.y"
+    COMMENT "Running Bison on grammar.y"
     VERBATIM
 )
 
 add_custom_command(
     OUTPUT ${GENERATED_DIR}/Lexer.C
-    COMMAND ${FLEX_EXECUTABLE} -Psyntax_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/syntax.l
-    DEPENDS ${GENERATED_DIR}/syntax.l ${GENERATED_DIR}/Bison.H BNFCGen
+    COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
+    DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
     WORKING_DIRECTORY ${GENERATED_DIR}
-    COMMENT "Running Flex on syntax.l"
+    COMMENT "Running Flex on grammar.l"
     VERBATIM
 )
 

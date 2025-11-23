@@ -32,14 +32,13 @@ enum class ErrorCode {
     InvalidScalarAccess,
     TooManyIndices,
     NotEnoughIndices,
-    UnexpectedOnnxName,
     InvalidDimensions,
     MajorVersionMismatch,
-    MissingNetwork,
     VariableCountMismatch,
     VariableShapeMismatch,
     VariableKindMismatch,
-    OnnxNameMismatch
+    MissingNetwork,
+    UnknownType,
 };
 
 enum class WarningCode {
@@ -69,17 +68,9 @@ private:
     int line_;
 };
 
-// Status of whether input or output variables in the network are using ONNX names
-typedef enum {
-    OnnxNamesUsed,
-    OnnxNamesNotUsed,
-    Unknown
-} OnnxNamesUsage; 
-
 // Structure to store network information for validation
 struct NetworkInfo {
     std::string name;
-    bool usesOnnxNames{false};              // Whether the network uses ONNX names for any input/output
     std::vector<const SymbolInfo*> vars;    // References to input and output variables
     NetworkInfo() = default;
     NetworkInfo(const std::string& networkName) : name(networkName) {}
@@ -92,9 +83,8 @@ public:
     bool addSymbol(VariableName *name, ElementType *type, ListNumber shape, SymbolKind kind, std::string onnxName = "");
     SymbolInfo *getSymbol(const VariableName &name);
     
-    DType currentDataType;                                      // Data type of the last scanned variable
+    TDataType currentDataType;                                  // Data type of the last scanned variable
     std::string lastScannedVariable;                            // Name of the last scanned variable
-    OnnxNamesUsage usesOnnxNames;                               // Whether ONNX names are used in the current input/output definitions
 
 private:
     std::unordered_map<std::string, SymbolInfo> symbolMap;      // Map to store symbols
@@ -112,7 +102,8 @@ public:
     void visitScalarDims(ScalarDims *p) override;
     void visitTensorDims(TensorDims *p) override;
 
-    void visitVarExpr(VarExpr* p) override;
+    void visitScalarVarExpr(ScalarVarExpr* p) override;
+    void visitTensorVarExpr(TensorVarExpr* p) override;
     void visitValExpr(ValExpr* p) override;
     void visitNegate(Negate* p) override;
     void visitPlus(Plus* p) override;
@@ -131,11 +122,10 @@ public:
     void visitAssert(Assert* p) override;
 
     void visitInputDef(InputDef* p) override;
-    void visitInputOnnxDef(InputOnnxDef* p) override;
     void visitHiddenDef(HiddenDef* p) override;
     void visitOutputDef(OutputDef* p) override;
-    void visitOutputOnnxDef(OutputOnnxDef* p) override;
 
+    void visitNodeName(NodeName* p) override;
     void visitIsomorphicTo(IsomorphicTo *p) override;
     void visitEqualTo(EqualTo *p) override;
     void visitNetworkDef(NetworkDef* p) override;
@@ -149,38 +139,18 @@ public:
     void visitBoolExpr(BoolExpr *p) override;
     void visitAssertion(Assertion *p) override;
     void visitElementType(ElementType *p) override;
+    void visitOnnxName(OnnxName *p) override;
     void visitInputDefinition(InputDefinition *p) override;
     void visitHiddenDefinition(HiddenDefinition *p) override;
     void visitOutputDefinition(OutputDefinition *p) override;
-    void visitCompStm(CompStm *p) override;
+    void visitNetworkEquivalence(NetworkEquivalence *p) override;
     void visitNetworkDefinition(NetworkDefinition *p) override;
     void visitVersion(Version *p) override;
     void visitQuery(Query *p) override;
 
     // --- Visitor methods for element types ---
 
-    void visitGenericElementType(GenericElementType *p) override;
-    void visitElementTypeF16(ElementTypeF16 *p) override;
-    void visitElementTypeF32(ElementTypeF32 *p) override;
-    void visitElementTypeF64(ElementTypeF64 *p) override;
-    void visitElementTypeBF16(ElementTypeBF16 *p) override;
-    void visitElementTypeF8E4M3FN(ElementTypeF8E4M3FN *p) override;
-    void visitElementTypeF8E5M2(ElementTypeF8E5M2 *p) override;
-    void visitElementTypeF8E4M3FNUZ(ElementTypeF8E4M3FNUZ *p) override;
-    void visitElementTypeF8E5M2FNUZ(ElementTypeF8E5M2FNUZ *p) override;
-    void visitElementTypeF4E2M1(ElementTypeF4E2M1 *p) override;
-    void visitElementTypeI8(ElementTypeI8 *p) override;
-    void visitElementTypeI16(ElementTypeI16 *p) override;
-    void visitElementTypeI32(ElementTypeI32 *p) override;
-    void visitElementTypeI64(ElementTypeI64 *p) override;
-    void visitElementTypeU8(ElementTypeU8 *p) override;
-    void visitElementTypeU16(ElementTypeU16 *p) override;
-    void visitElementTypeU32(ElementTypeU32 *p) override;
-    void visitElementTypeU64(ElementTypeU64 *p) override;
-    void visitElementTypeC64(ElementTypeC64 *p) override;
-    void visitElementTypeC128(ElementTypeC128 *p) override;
-    void visitElementTypeBool(ElementTypeBool *p) override;
-    void visitElementTypeString(ElementTypeString *p) override;
+    void visitDType(DType *p) override;
 
     // --- Visitor methods for list types ---
 
@@ -191,7 +161,7 @@ public:
     void visitListInputDefinition(ListInputDefinition *p) override;
     void visitListHiddenDefinition(ListHiddenDefinition *p) override;
     void visitListOutputDefinition(ListOutputDefinition *p) override;
-    void visitListCompStm(ListCompStm *p) override;
+    void visitListNetworkEquivalence(ListNetworkEquivalence *p) override;
     void visitListNetworkDefinition(ListNetworkDefinition *p) override;
 
     // --- Visitor methods for tokens ---
@@ -205,9 +175,6 @@ public:
     void visitNumber(Number *x) override;
     void visitVersionToken(VersionToken *x) override;
 
-    // Apply scope checking to tensor elements
-    void visitTensorElement(VariableName *name, std::vector<int64_t> indices);
-
     // Error collection and reporting methods
     void addDiagnostic(Severity severity, int code, const std::string& message,
                        const std::string& offending_symbol = "",
@@ -217,7 +184,7 @@ public:
     int getWarningCount() const;
     std::string getErrorReport() const;
     
-    static DType mapDType(ElementType *e);
+    static TDataType mapDType(ElementType *e);
     static Shape mapShape(TensorShape *s);
     static std::vector<int64_t> mapIndices(const ListNumber *i);
 
@@ -226,6 +193,9 @@ public:
     void collectNetworkVariables(NetworkInfo& networkInfo, const ListInputDefinition* inputs, const ListOutputDefinition* outputs);
     bool areVariablesCongruent(const NetworkInfo& current, const NetworkInfo& target, int line);
     bool validateSymbolCongruence(const SymbolInfo& a, const SymbolInfo& b, const NetworkInfo& current, const NetworkInfo& target, size_t i, int line);
+
+    void validateVariableAccess(const VariableName* name);
+    void validateTensorIndexing(VariableName *name, std::vector<int64_t> indices);
 
 protected:
     Context& getContext() { return *ctx; }

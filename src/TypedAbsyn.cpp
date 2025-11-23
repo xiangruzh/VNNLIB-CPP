@@ -2,79 +2,79 @@
 
 // ----------- Utility Functions ----------
 
-std::string dtypeToString(DType dt) {
+std::string dtypeToString(TDataType dt) {
   switch (dt) {
-    case DType::Real: return "Real";
-    case DType::F16: return "F16";
-    case DType::F32: return "F32";
-    case DType::F64: return "F64";
-    case DType::BF16: return "BF16";
-    case DType::F8E4M3FN: return "F8E4M3FN";
-    case DType::F8E5M2: return "F8E5M2";
-    case DType::F8E4M3FNUZ: return "F8E4M3FNUZ";
-    case DType::F8E5M2FNUZ: return "F8E5M2FNUZ";
-    case DType::F4E2M1: return "F4E2M1";
-    case DType::I8: return "I8";
-    case DType::I16: return "I16";
-    case DType::I32: return "I32";
-    case DType::I64: return "I64";
-    case DType::U8: return "U8";
-    case DType::U16: return "U16";
-    case DType::U32: return "U32";
-    case DType::U64: return "U64";
-    case DType::C64: return "C64";
-    case DType::C128: return "C128";
-    case DType::Bool: return "Bool";
-    case DType::String: return "String";
-    case DType::FloatConstant: return "FloatConstant";
-    case DType::NegativeIntConstant: return "NegativeIntConstant";
-    case DType::PositiveIntConstant: return "PositiveIntConstant";
+    case TDataType::Real: return "Real";
+    case TDataType::F16: return "F16";
+    case TDataType::F32: return "F32";
+    case TDataType::F64: return "F64";
+    case TDataType::BF16: return "BF16";
+    case TDataType::F8E4M3FN: return "F8E4M3FN";
+    case TDataType::F8E5M2: return "F8E5M2";
+    case TDataType::F8E4M3FNUZ: return "F8E4M3FNUZ";
+    case TDataType::F8E5M2FNUZ: return "F8E5M2FNUZ";
+    case TDataType::F4E2M1: return "F4E2M1";
+    case TDataType::I8: return "I8";
+    case TDataType::I16: return "I16";
+    case TDataType::I32: return "I32";
+    case TDataType::I64: return "I64";
+    case TDataType::U8: return "U8";
+    case TDataType::U16: return "U16";
+    case TDataType::U32: return "U32";
+    case TDataType::U64: return "U64";
+    case TDataType::C64: return "C64";
+    case TDataType::C128: return "C128";
+    case TDataType::Bool: return "Bool";
+    case TDataType::String: return "String";
+    case TDataType::FloatConstant: return "FloatConstant";
+    case TDataType::NegativeIntConstant: return "NegativeIntConstant";
+    case TDataType::PositiveIntConstant: return "PositiveIntConstant";
     default: return "Unknown";
   }
 }
 
-bool isConstant(DType dt) {
-    return dt == DType::FloatConstant || dt == DType::NegativeIntConstant || dt == DType::PositiveIntConstant;
+bool isConstant(TDataType dt) {
+    return dt == TDataType::FloatConstant || dt == TDataType::NegativeIntConstant || dt == TDataType::PositiveIntConstant;
 }
 
 // Returns true if the data type of the expression is in the same family as a constant data type
-bool sameFamily(DType exprType, DType constType) {
+bool sameFamily(TDataType exprType, TDataType constType) {
     if (isConstant(constType)) {
         switch (exprType) {
-            case DType::Real:
-            case DType::F16:
-            case DType::F32:
-            case DType::F64:
-            case DType::BF16:
-            case DType::F8E4M3FN:
-            case DType::F8E5M2:
-            case DType::F8E4M3FNUZ:
-            case DType::F8E5M2FNUZ:
-            case DType::F4E2M1:
-              return constType == DType::FloatConstant;
-            case DType::I8:
-            case DType::I16:
-            case DType::I32:
-            case DType::I64:
-              return constType == DType::NegativeIntConstant || constType == DType::PositiveIntConstant;
-            case DType::U8:
-            case DType::U16:
-            case DType::U32:
-            case DType::U64:
-              return constType == DType::PositiveIntConstant;
-            case DType::FloatConstant:
-              return constType == DType::FloatConstant;
-            case DType::NegativeIntConstant:
-            case DType::PositiveIntConstant:
-              return constType == DType::NegativeIntConstant || constType == DType::PositiveIntConstant;
+            case TDataType::Real:
+            case TDataType::F16:
+            case TDataType::F32:
+            case TDataType::F64:
+            case TDataType::BF16:
+            case TDataType::F8E4M3FN:
+            case TDataType::F8E5M2:
+            case TDataType::F8E4M3FNUZ:
+            case TDataType::F8E5M2FNUZ:
+            case TDataType::F4E2M1:
+              return constType == TDataType::FloatConstant;
+            case TDataType::I8:
+            case TDataType::I16:
+            case TDataType::I32:
+            case TDataType::I64:
+              return constType == TDataType::NegativeIntConstant || constType == TDataType::PositiveIntConstant;
+            case TDataType::U8:
+            case TDataType::U16:
+            case TDataType::U32:
+            case TDataType::U64:
+              return constType == TDataType::PositiveIntConstant;
+            case TDataType::FloatConstant:
+              return constType == TDataType::FloatConstant;
+            case TDataType::NegativeIntConstant:
+            case TDataType::PositiveIntConstant:
+              return constType == TDataType::NegativeIntConstant || constType == TDataType::PositiveIntConstant;
             default:
                 return false;
         }
     }
-    return false; // If constDt is not a constant type
+    return false; // If constType is not a constant data type
 }
 
-bool sameType(DType a, DType b) {
+bool sameType(TDataType a, TDataType b) {
     return a == b;
 }
 

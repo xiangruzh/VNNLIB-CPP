@@ -18,7 +18,7 @@ using Shape = std::vector<int64_t>;
 using Indices = std::vector<int64_t>;
 
 // Supported Data Types
-enum class DType {
+enum class TDataType {
 	Real,
 	F16, F32, F64, BF16,
 	F8E4M3FN, F8E5M2, F8E4M3FNUZ, F8E5M2FNUZ, F4E2M1,
@@ -28,10 +28,10 @@ enum class DType {
 	FloatConstant, NegativeIntConstant, PositiveIntConstant
 };
 
-std::string dtypeToString(DType dt);
-bool isConstant(DType dt);
-bool sameFamily(DType varDt, DType constDt);
-bool sameType(DType a, DType b);
+std::string dtypeToString(TDataType dt);
+bool isConstant(TDataType dt);
+bool sameFamily(TDataType varDt, TDataType constDt);
+bool sameType(TDataType a, TDataType b);
 
 // Structure to store symbol information
 enum class SymbolKind {Input, Hidden, Output, Network, Unknown};
@@ -40,7 +40,7 @@ class VNNLIB_API SymbolInfo final {
 public:
 	std::string name{};
 	std::string onnxName{};
-	DType dtype{DType::Unknown};
+	TDataType dtype{TDataType::Unknown};
 	Shape shape{};
 	SymbolKind kind{SymbolKind::Unknown};
 	std::string networkName{};
@@ -48,7 +48,7 @@ public:
 	bool isScalar() const;
 	size_t rank() const;
 
-	SymbolInfo(std::string name, DType dtype, Shape shape, SymbolKind kind, std::string onnxName = "")
+	SymbolInfo(std::string name, TDataType dtype, Shape shape, SymbolKind kind, std::string onnxName = "")
         : name(name), onnxName(onnxName), dtype(dtype), shape(std::move(shape)), kind(kind) {}
 
     bool operator==(const SymbolInfo &other) const;
@@ -73,7 +73,7 @@ protected:
 class VNNLIB_API TElementType : public TNode {
 friend class TypedBuilder;
 public:
-	DType dtype{DType::Unknown};
+	TDataType dtype{TDataType::Unknown};
 	virtual ~TElementType() = default;
 	void children(std::vector<const TNode*>& out) const override;
 	std::string toString() const override;
@@ -86,7 +86,7 @@ protected:
 class VNNLIB_API TArithExpr : public TNode {
 friend class TypedBuilder;
 public:
-	DType dtype{DType::Unknown};
+	TDataType dtype{TDataType::Unknown};
 	virtual ~TArithExpr() = default;
 	std::string toString() const override;
 protected:

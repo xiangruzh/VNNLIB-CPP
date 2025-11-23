@@ -1,5 +1,7 @@
 #include "TypedBuilder.h"
 
+// --- Utility Functions ---
+
 template <class T>
 std::unique_ptr<T> TypedBuilder::pop(std::vector<std::unique_ptr<T>>& stack) {
     assert(!stack.empty());
@@ -20,7 +22,6 @@ std::vector<std::unique_ptr<T>> TypedBuilder::popRange(std::vector<std::unique_p
     return out;
 }
 
-
 // --- Entry Point (API) ---
 
 std::unique_ptr<TQuery> TypedBuilder::build(VNNLibQuery* root) {
@@ -28,12 +29,26 @@ std::unique_ptr<TQuery> TypedBuilder::build(VNNLibQuery* root) {
     return std::move(tquery_);
 }
 
-
 // --- ArithExpr ---
 
-void TypedBuilder::visitVarExpr(VarExpr* p) {
-    // Do type checks
-    TypeChecker::visitVarExpr(p);
+void TypedBuilder::visitScalarVarExpr(ScalarVarExpr* p) {
+    TypeChecker::visitScalarVarExpr(p);
+
+    auto node = std::make_unique<TVarExpr>();
+    node->src_ArithExpr = static_cast<ArithExpr*>(p);
+    node->indices = {}; // Scalar variable has no indices
+
+    auto it = symbolMap_.find(p->variablename_->string_);
+    if (it != symbolMap_.end()) {
+        node->symbol = it->second;
+        node->line = p->variablename_->integer_;
+        node->dtype = node->symbol->dtype;
+    }
+    arithStack_.push_back(std::move(node));
+}
+
+void TypedBuilder::visitTensorVarExpr(TensorVarExpr* p) {
+    TypeChecker::visitTensorVarExpr(p);
 
     auto node = std::make_unique<TVarExpr>();
     node->src_ArithExpr = static_cast<ArithExpr*>(p);
@@ -69,7 +84,7 @@ void TypedBuilder::visitValExpr(ValExpr* p) {
 
 void TypedBuilder::visitNegate(Negate* p) {
     auto mark = arithStack_.size();
-    // visits child using overridden function (dynamic dispatch). The child is then pushed onto the stack.
+    // visits child using overridden function. The child is then pushed onto the stack.
     TypeChecker::visitNegate(p);
 
     auto node = std::make_unique<TNegate>();
@@ -120,7 +135,6 @@ void TypedBuilder::visitMultiply(Multiply* p) {
     node->dtype = getContext().currentDataType;
     arithStack_.push_back(std::move(node));
 }
-
 
 // --- BoolExpr ---
 
@@ -256,28 +270,13 @@ void TypedBuilder::visitInputDef(InputDef* p) {
     lastNetwork->inputs.push_back(std::move(node));
 }
 
-void TypedBuilder::visitInputOnnxDef(InputOnnxDef* p) {
-    TypeChecker::visitInputOnnxDef(p);
-
-    auto symbol = std::make_shared<SymbolInfo>(
-        p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Input, p->string_
-    );
-    if (!netStack_.empty()) symbol->networkName = netStack_.back()->networkName;
-    symbolMap_[symbol->name] = symbol;
-
-    auto node = std::make_unique<TInputDefinition>();
-    node->symbol = std::move(symbol);
-    node->src_InputDefinition = static_cast<InputDefinition*>(p);
-
-    auto lastNetwork = netStack_.back();
-    lastNetwork->inputs.push_back(std::move(node));
-}
-
 void TypedBuilder::visitHiddenDef(HiddenDef* p) {
     TypeChecker::visitHiddenDef(p);
 
+    NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
+    std::string onnxNameStr = onnxName->string_;
     auto symbol = std::make_shared<SymbolInfo>(
-        p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Hidden, p->string_
+        p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Hidden, onnxNameStr
     );
     if (!netStack_.empty()) symbol->networkName = netStack_.back()->networkName;
     symbolMap_[symbol->name] = symbol;
@@ -295,23 +294,6 @@ void TypedBuilder::visitOutputDef(OutputDef* p) {
 
     auto symbol = std::make_shared<SymbolInfo>(
         p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Output, ""
-    );
-    if (!netStack_.empty()) symbol->networkName = netStack_.back()->networkName;
-    symbolMap_[symbol->name] = symbol;
-
-    auto node = std::make_unique<TOutputDefinition>();
-    node->symbol = std::move(symbol);
-    node->src_OutputDefinition = static_cast<OutputDefinition*>(p);
-
-    auto lastNetwork = netStack_.back();
-    lastNetwork->outputs.push_back(std::move(node));
-}
-
-void TypedBuilder::visitOutputOnnxDef(OutputOnnxDef* p) {
-    TypeChecker::visitOutputOnnxDef(p);
-
-    auto symbol = std::make_shared<SymbolInfo>(
-        p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Output, p->string_
     );
     if (!netStack_.empty()) symbol->networkName = netStack_.back()->networkName;
     symbolMap_[symbol->name] = symbol;
@@ -392,92 +374,8 @@ void TypedBuilder::visitTensorDims(TensorDims *p) {
     TypeChecker::visitTensorDims(p);
 }
 
-void TypedBuilder::visitGenericElementType(GenericElementType *p) {
-    TypeChecker::visitGenericElementType(p);
-}
-
-void TypedBuilder::visitElementTypeF16(ElementTypeF16 *p) {
-    TypeChecker::visitElementTypeF16(p);
-}
-
-void TypedBuilder::visitElementTypeF32(ElementTypeF32 *p) {
-    TypeChecker::visitElementTypeF32(p);
-}
-
-void TypedBuilder::visitElementTypeF64(ElementTypeF64 *p) {
-    TypeChecker::visitElementTypeF64(p);
-}
-
-void TypedBuilder::visitElementTypeBF16(ElementTypeBF16 *p) {
-    TypeChecker::visitElementTypeBF16(p);
-}
-
-void TypedBuilder::visitElementTypeF8E4M3FN(ElementTypeF8E4M3FN *p) {
-    TypeChecker::visitElementTypeF8E4M3FN(p);
-}
-
-void TypedBuilder::visitElementTypeF8E5M2(ElementTypeF8E5M2 *p) {
-    TypeChecker::visitElementTypeF8E5M2(p);
-}
-
-void TypedBuilder::visitElementTypeF8E4M3FNUZ(ElementTypeF8E4M3FNUZ *p) {
-    TypeChecker::visitElementTypeF8E4M3FNUZ(p);
-}
-
-void TypedBuilder::visitElementTypeF8E5M2FNUZ(ElementTypeF8E5M2FNUZ *p) {
-    TypeChecker::visitElementTypeF8E5M2FNUZ(p);
-}
-
-void TypedBuilder::visitElementTypeF4E2M1(ElementTypeF4E2M1 *p) {
-    TypeChecker::visitElementTypeF4E2M1(p);
-}
-
-void TypedBuilder::visitElementTypeI8(ElementTypeI8 *p) {
-    TypeChecker::visitElementTypeI8(p);
-}
-
-void TypedBuilder::visitElementTypeI16(ElementTypeI16 *p) {
-    TypeChecker::visitElementTypeI16(p);
-}
-
-void TypedBuilder::visitElementTypeI32(ElementTypeI32 *p) {
-    TypeChecker::visitElementTypeI32(p);
-}
-
-void TypedBuilder::visitElementTypeI64(ElementTypeI64 *p) {
-    TypeChecker::visitElementTypeI64(p);
-}
-
-void TypedBuilder::visitElementTypeU8(ElementTypeU8 *p) {
-    TypeChecker::visitElementTypeU8(p);
-}
-
-void TypedBuilder::visitElementTypeU16(ElementTypeU16 *p) {
-    TypeChecker::visitElementTypeU16(p);
-}
-
-void TypedBuilder::visitElementTypeU32(ElementTypeU32 *p) {
-    TypeChecker::visitElementTypeU32(p);
-}
-
-void TypedBuilder::visitElementTypeU64(ElementTypeU64 *p) {
-    TypeChecker::visitElementTypeU64(p);
-}
-
-void TypedBuilder::visitElementTypeC64(ElementTypeC64 *p) {
-    TypeChecker::visitElementTypeC64(p);
-}
-
-void TypedBuilder::visitElementTypeC128(ElementTypeC128 *p) {
-    TypeChecker::visitElementTypeC128(p);
-}
-
-void TypedBuilder::visitElementTypeBool(ElementTypeBool *p) {
-    TypeChecker::visitElementTypeBool(p);
-}
-
-void TypedBuilder::visitElementTypeString(ElementTypeString *p) {
-    TypeChecker::visitElementTypeString(p);
+void TypedBuilder::visitDType(DType *p) {
+    TypeChecker::visitDType(p);
 }
 
 void TypedBuilder::visitListArithExpr(ListArithExpr *p) {
@@ -504,8 +402,8 @@ void TypedBuilder::visitListOutputDefinition(ListOutputDefinition *p) {
     TypeChecker::visitListOutputDefinition(p);
 }
 
-void TypedBuilder::visitListCompStm(ListCompStm *p) {
-    TypeChecker::visitListCompStm(p);
+void TypedBuilder::visitListNetworkEquivalence(ListNetworkEquivalence *p) {
+    TypeChecker::visitListNetworkEquivalence(p);
 }
 
 void TypedBuilder::visitListNetworkDefinition(ListNetworkDefinition *p) {
