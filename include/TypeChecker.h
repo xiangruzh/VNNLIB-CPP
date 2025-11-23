@@ -38,6 +38,7 @@ enum class ErrorCode {
     VariableShapeMismatch,
     VariableKindMismatch,
     MissingNetwork,
+    ChainedEquivalence,
     UnknownType,
 };
 
@@ -72,6 +73,7 @@ private:
 struct NetworkInfo {
     std::string name;
     std::vector<const SymbolInfo*> vars;    // References to input and output variables
+    bool hasEquivalence = false;            // Whether the network has equivalence constraints
     NetworkInfo() = default;
     NetworkInfo(const std::string& networkName) : name(networkName) {}
 };

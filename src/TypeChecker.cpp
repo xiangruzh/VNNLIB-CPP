@@ -176,6 +176,7 @@ std::string Diagnostic::codeToString() const {
             case ErrorCode::VariableShapeMismatch: return "VariableShapeMismatch";
             case ErrorCode::VariableKindMismatch: return "VariableKindMismatch";
             case ErrorCode::MissingNetwork: return "MissingNetwork";
+            case ErrorCode::ChainedEquivalence: return "ChainedEquivalence";
             case ErrorCode::UnknownType: return "UnknownType";
             default: break;
         }
@@ -513,6 +514,7 @@ void TypeChecker::visitNetworkDef(NetworkDef *p) {
     // Store network information for later validation
     NetworkInfo networkInfo;
     networkInfo.name = currentNetworkName;
+    networkInfo.hasEquivalence = !p->listnetworkequivalence_->empty();
     collectNetworkVariables(networkInfo, p->listinputdefinition_, p->listoutputdefinition_);
     networks[currentNetworkName] = networkInfo;
     visitListNetworkEquivalence(p->listnetworkequivalence_);
@@ -737,6 +739,15 @@ void TypeChecker::validateNetworkCongruence(VariableName* referencedNetworkName,
             // Check variables congruence
             if (!areVariablesCongruent(currentNetwork, referencedNetwork, referencedNetworkName->integer_)) {
                 return;
+            }
+
+            // Check that the referenced network does not have further equivalence constraints
+            if (referencedNetwork.hasEquivalence) {
+                addDiagnostic(Severity::Error, static_cast<int>(ErrorCode::ChainedEquivalence),
+                            string_format("Chained network equivalence is not allowed. Network '%s' already has equivalence constraints.", referencedName.c_str()),
+                            referencedName,
+                            "Network equivalence cannot be chained.",
+                            referencedNetworkName->integer_);
             }
         }
     }
