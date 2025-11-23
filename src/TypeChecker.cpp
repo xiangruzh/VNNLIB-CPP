@@ -7,26 +7,26 @@ TDataType TypeChecker::mapDType(ElementType* e) {
     DType *dt = dynamic_cast<DType *>(e);
     std::string typeName = dt->variablename_->string_;
     if (typeName == "Real") return TDataType::Real;
-    else if (typeName == "F16") return TDataType::F16;
-    else if (typeName == "F32") return TDataType::F32;
-    else if (typeName == "F64") return TDataType::F64;
-    else if (typeName == "BF16") return TDataType::BF16;
-    else if (typeName == "F8E4M3FN") return TDataType::F8E4M3FN;
-    else if (typeName == "F8E5M2") return TDataType::F8E5M2;
-    else if (typeName == "F8E4M3FNUZ") return TDataType::F8E4M3FNUZ;
-    else if (typeName == "F8E5M2FNUZ") return TDataType::F8E5M2FNUZ;
-    else if (typeName == "F4E2M1") return TDataType::F4E2M1;
-    else if (typeName == "I8") return TDataType::I8;
-    else if (typeName == "I16") return TDataType::I16;
-    else if (typeName == "I32") return TDataType::I32;
-    else if (typeName == "I64") return TDataType::I64;
-    else if (typeName == "U8") return TDataType::U8;
-    else if (typeName == "U16") return TDataType::U16;
-    else if (typeName == "U32") return TDataType::U32;
-    else if (typeName == "U64") return TDataType::U64;
-    else if (typeName == "C64") return TDataType::C64;
-    else if (typeName == "C128") return TDataType::C128;
-    else if (typeName == "Bool") return TDataType::Bool;
+    else if (typeName == "float16") return TDataType::F16;
+    else if (typeName == "float32") return TDataType::F32;
+    else if (typeName == "float64") return TDataType::F64;
+    else if (typeName == "bfloat16") return TDataType::BF16;
+    else if (typeName == "float8e4m3fn") return TDataType::F8E4M3FN;
+    else if (typeName == "float8e5m2") return TDataType::F8E5M2;
+    else if (typeName == "float8e4m3fnuz") return TDataType::F8E4M3FNUZ;
+    else if (typeName == "float8e5m2fnuz") return TDataType::F8E5M2FNUZ;
+    else if (typeName == "float4e2m1") return TDataType::F4E2M1;
+    else if (typeName == "int8") return TDataType::I8;
+    else if (typeName == "int16") return TDataType::I16;
+    else if (typeName == "int32") return TDataType::I32;
+    else if (typeName == "int64") return TDataType::I64;
+    else if (typeName == "uint8") return TDataType::U8;
+    else if (typeName == "uint16") return TDataType::U16;
+    else if (typeName == "uint32") return TDataType::U32;
+    else if (typeName == "uint64") return TDataType::U64;
+    else if (typeName == "complex64") return TDataType::C64;
+    else if (typeName == "complex128") return TDataType::C128;
+    else if (typeName == "bool") return TDataType::Bool;
     else return TDataType::Unknown; // Unknown type
 }
 
@@ -170,6 +170,7 @@ std::string Diagnostic::codeToString() const {
             case ErrorCode::IndexOutOfBounds: return "IndexOutOfBounds";
             case ErrorCode::TooManyIndices: return "TooManyIndices";
             case ErrorCode::NotEnoughIndices: return "NotEnoughIndices";
+            case ErrorCode::InvalidScalarAccess: return "InvalidScalarAccess";
             case ErrorCode::InvalidDimensions: return "InvalidDimensions";
             case ErrorCode::MajorVersionMismatch: return "MajorVersionMismatch";
             case ErrorCode::VariableCountMismatch: return "VariableCountMismatch";
@@ -591,6 +592,7 @@ std::string make_element(std::string_view name, const Indices& indices) {
 // Checks for valid tensor element access
 void TypeChecker::validateTensorIndexing(VariableName *name, Indices indices) {
     const SymbolInfo *symbol = ctx->getSymbol(*name);
+    if (!symbol) return;
     std::string name_str = name->string_;
     std::string element_str = make_element(name_str, indices);
 
@@ -662,6 +664,7 @@ void TypeChecker::validateVariableAccess(const VariableName* name) {
             "Variable must be declared before use.",
             name->integer_
         );
+        return;
     }
 
     TDataType nodeType = symbol->dtype;
