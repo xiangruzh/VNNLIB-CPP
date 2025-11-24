@@ -198,3 +198,49 @@ add_custom_target(clean-generated
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${GENERATED_DIR}
     COMMENT "Cleaning generated parser files"
 )
+
+# ------------------------------------------------------------
+# Optional Julia wrapper
+# ------------------------------------------------------------
+
+option(MAKE_JULIA "Build Julia wrapper library" OFF)
+
+if(MAKE_JULIA)
+    message(STATUS "Building Julia wrapper library")
+    
+    # Find JlCxx (from CxxWrap.jl)
+    find_package(JlCxx REQUIRED)
+    
+    # Define the Julia wrapper sources
+    # Note: Adjust this path if your VNNLib_julia.cpp is located elsewhere
+    set(JULIA_WRAPPER_SOURCE "${SRC_DIR}/VNNLib_julia.cpp")
+
+    add_library(VNNLib_julia SHARED ${JULIA_WRAPPER_SOURCE})
+    
+    # Ensure that the wrapper can see VNNLib headers and JlCxx headers
+    target_include_directories(VNNLib_julia
+        PRIVATE 
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${JlCxx_INCLUDE_DIRS}
+            ${INCLUDE_DIR}
+            ${INCLUDE_DIR}/util
+            ${GENERATED_DIR}
+    )
+    
+    # Link against JlCxx and the VNNLib library
+    target_link_libraries(VNNLib_julia 
+        PRIVATE
+            JlCxx::cxxwrap_julia
+            VNNLib
+    )
+    
+    # On *nix: avoid the lib prefix, so Julia can load the shared library directly
+    set_target_properties(VNNLib_julia PROPERTIES
+        PREFIX ""  # yields "VNNLib_julia.so" instead of "libVNNLib_julia.so" 
+    )
+    
+    # Ensure parser generation happens before building Julia wrapper
+    add_dependencies(VNNLib_julia BNFCGen ParserGen VNNLib)
+    
+    message(STATUS "Julia wrapper library will be built as VNNLib_julia")
+endif()
