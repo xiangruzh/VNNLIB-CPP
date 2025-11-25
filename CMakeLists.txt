@@ -9,7 +9,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Find required tools
 # ------------------------------------------------------------
 
-find_program(BNFC_EXECUTABLE bnfc REQUIRED)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
@@ -28,7 +27,7 @@ endif()
 # ------------------------------------------------------------
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(GENERATED_DIR ${SRC_DIR}/generated)
+set(GENERATED_DIR "${SRC_DIR}/generated" CACHE PATH "Directory with generated files")
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Output directories
@@ -47,29 +46,39 @@ include_directories(
 # BNFC generation
 # ------------------------------------------------------------
 
-set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
+option(NO_BNFC "Do not run BNFC to generate parser files; requires precompiled parser files at ${GENERATED_DIR}" OFF)
 
-add_custom_command(
-    OUTPUT
-        ${GENERATED_DIR}/Absyn.C
-        ${GENERATED_DIR}/Absyn.H
-        ${GENERATED_DIR}/Printer.C
-        ${GENERATED_DIR}/Printer.H
-        ${GENERATED_DIR}/Buffer.C
-        ${GENERATED_DIR}/Buffer.H
-        ${GENERATED_DIR}/grammar.y
-        ${GENERATED_DIR}/grammar.l
-        ${GENERATED_DIR}/Parser.H
-        ${GENERATED_DIR}/ParserError.H
-        ${GENERATED_DIR}/Skeleton.C
-        ${GENERATED_DIR}/Skeleton.H
-        ${GENERATED_DIR}/Test.C
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
-    COMMAND ${BNFC_EXECUTABLE} --cpp -o ${GENERATED_DIR} ${BNFC_INPUT}
-    DEPENDS ${BNFC_INPUT}
-    COMMENT "Running BNFC on ${BNFC_INPUT}"
-    VERBATIM
-)
+if(NO_BNFC)
+    message(STATUS "Skipping BNFC generation as NO_BNFC is set")
+else()
+    message(STATUS "BNFC generation enabled")
+
+    find_program(BNFC_EXECUTABLE bnfc REQUIRED)
+
+    set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
+
+    add_custom_command(
+        OUTPUT
+            ${GENERATED_DIR}/Absyn.C
+            ${GENERATED_DIR}/Absyn.H
+            ${GENERATED_DIR}/Printer.C
+            ${GENERATED_DIR}/Printer.H
+            ${GENERATED_DIR}/Buffer.C
+            ${GENERATED_DIR}/Buffer.H
+            ${GENERATED_DIR}/grammar.y
+            ${GENERATED_DIR}/grammar.l
+            ${GENERATED_DIR}/Parser.H
+            ${GENERATED_DIR}/ParserError.H
+            ${GENERATED_DIR}/Skeleton.C
+            ${GENERATED_DIR}/Skeleton.H
+            ${GENERATED_DIR}/Test.C
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
+        COMMAND ${BNFC_EXECUTABLE} --cpp -o ${GENERATED_DIR} ${BNFC_INPUT}
+        DEPENDS ${BNFC_INPUT}
+        COMMENT "Running BNFC on ${BNFC_INPUT}"
+        VERBATIM
+    )
+endif()
 
 add_custom_target(BNFCGen
     DEPENDS
@@ -231,6 +240,7 @@ if(MAKE_JULIA)
     target_link_libraries(VNNLib_julia 
         PRIVATE
             JlCxx::cxxwrap_julia
+            JlCxx::cxxwrap_julia_stl
             VNNLib
     )
     
