@@ -169,6 +169,11 @@ add_library(VNNLib SHARED
     ${GENERATED_SRCS}
 )
 
+# Define VNNLIB_BUILD_DLL when building the shared library on Windows (MSVC and MinGW)
+if(WIN32)
+    target_compile_definitions(VNNLib PRIVATE VNNLIB_BUILD_DLL)
+endif()
+
 # Ensure parser generation before building
 add_dependencies(VNNLib BNFCGen ParserGen)
 
@@ -225,6 +230,9 @@ if(MAKE_JULIA)
     set(JULIA_WRAPPER_SOURCE "${SRC_DIR}/VNNLib_julia.cpp")
 
     add_library(VNNLib_julia SHARED ${JULIA_WRAPPER_SOURCE})
+    
+    # VNNLib_julia should NOT define VNNLIB_BUILD_DLL (it imports from VNNLib)
+    # The wrapper itself doesn't export VNNLib symbols, it wraps them
     
     # Ensure that the wrapper can see VNNLib headers and JlCxx headers
     target_include_directories(VNNLib_julia
