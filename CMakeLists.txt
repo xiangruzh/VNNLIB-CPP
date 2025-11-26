@@ -200,6 +200,11 @@ add_executable(VNNLibParser
     ${GENERATED_SRCS}
 )
 
+# Define VNNLIB_BUILD_DLL for the executable on Windows since it compiles the sources directly
+if(WIN32)
+    target_compile_definitions(VNNLibParser PRIVATE VNNLIB_BUILD_DLL)
+endif()
+
 # Ensure parser generation happens before building executable
 add_dependencies(VNNLibParser BNFCGen ParserGen)
 
