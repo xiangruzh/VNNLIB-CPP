@@ -257,6 +257,11 @@ if(MAKE_JULIA)
             VNNLib
     )
     
+    # On Windows/MinGW: enable big object files to handle many template instantiations
+    if(WIN32)
+        target_compile_options(VNNLib_julia PRIVATE -Wa,-mbig-obj)
+    endif()
+    
     # On *nix: avoid the lib prefix, so Julia can load the shared library directly
     set_target_properties(VNNLib_julia PROPERTIES
         PREFIX ""  # yields "VNNLib_julia.so" instead of "libVNNLib_julia.so" 
