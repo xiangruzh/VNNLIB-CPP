@@ -581,8 +581,20 @@ std::string make_element(std::string_view name, const Indices& indices) {
         first = false;
 
         char buf[24];
-        auto [p, ec] = std::to_chars(std::begin(buf), std::end(buf), idx);
-        out.append(buf, p);
+        #if defined(__cpp_lib_to_chars) && __cpp_lib_to_chars >= 201611L
+        // Use std::to_chars when available (C++17 feature, not on old macOS)
+            auto [p, ec] = std::to_chars(std::begin(buf), std::end(buf), idx);
+            out.append(buf, p);
+        #else
+        // Fallback to snprintf for older systems (e.g., macOS < 10.15)
+            int len = snprintf(buf, sizeof(buf), "%d", idx);
+            if (len > 0) {
+                if (len >= (int)sizeof(buf)){
+                    len = sizeof(buf) - 1; // truncated
+                }
+                out.append(buf, len);
+            }
+        #endif
     }
 
     out.push_back(']');
