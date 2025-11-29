@@ -9,7 +9,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Find required tools
 # ------------------------------------------------------------
 
-find_program(BNFC_EXECUTABLE bnfc REQUIRED)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
@@ -28,7 +27,7 @@ endif()
 # ------------------------------------------------------------
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(GENERATED_DIR ${SRC_DIR}/generated)
+set(GENERATED_DIR "${SRC_DIR}/generated" CACHE PATH "Directory with generated files")
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Output directories
@@ -47,29 +46,39 @@ include_directories(
 # BNFC generation
 # ------------------------------------------------------------
 
-set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
+option(NO_BNFC "Do not run BNFC to generate parser files; requires precompiled parser files at ${GENERATED_DIR}" OFF)
 
-add_custom_command(
-    OUTPUT
-        ${GENERATED_DIR}/Absyn.C
-        ${GENERATED_DIR}/Absyn.H
-        ${GENERATED_DIR}/Printer.C
-        ${GENERATED_DIR}/Printer.H
-        ${GENERATED_DIR}/Buffer.C
-        ${GENERATED_DIR}/Buffer.H
-        ${GENERATED_DIR}/grammar.y
-        ${GENERATED_DIR}/grammar.l
-        ${GENERATED_DIR}/Parser.H
-        ${GENERATED_DIR}/ParserError.H
-        ${GENERATED_DIR}/Skeleton.C
-        ${GENERATED_DIR}/Skeleton.H
-        ${GENERATED_DIR}/Test.C
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
-    COMMAND ${BNFC_EXECUTABLE} --cpp -o ${GENERATED_DIR} ${BNFC_INPUT}
-    DEPENDS ${BNFC_INPUT}
-    COMMENT "Running BNFC on ${BNFC_INPUT}"
-    VERBATIM
-)
+if(NO_BNFC)
+    message(STATUS "Skipping BNFC generation as NO_BNFC is set")
+else()
+    message(STATUS "BNFC generation enabled")
+
+    find_program(BNFC_EXECUTABLE bnfc REQUIRED)
+
+    set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
+
+    add_custom_command(
+        OUTPUT
+            ${GENERATED_DIR}/Absyn.C
+            ${GENERATED_DIR}/Absyn.H
+            ${GENERATED_DIR}/Printer.C
+            ${GENERATED_DIR}/Printer.H
+            ${GENERATED_DIR}/Buffer.C
+            ${GENERATED_DIR}/Buffer.H
+            ${GENERATED_DIR}/grammar.y
+            ${GENERATED_DIR}/grammar.l
+            ${GENERATED_DIR}/Parser.H
+            ${GENERATED_DIR}/ParserError.H
+            ${GENERATED_DIR}/Skeleton.C
+            ${GENERATED_DIR}/Skeleton.H
+            ${GENERATED_DIR}/Test.C
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_DIR}
+        COMMAND ${BNFC_EXECUTABLE} --cpp -o ${GENERATED_DIR} ${BNFC_INPUT}
+        DEPENDS ${BNFC_INPUT}
+        COMMENT "Running BNFC on ${BNFC_INPUT}"
+        VERBATIM
+    )
+endif()
 
 add_custom_target(BNFCGen
     DEPENDS
@@ -160,6 +169,11 @@ add_library(VNNLib SHARED
     ${GENERATED_SRCS}
 )
 
+# Define VNNLIB_BUILD_DLL when building the shared library on Windows (MSVC and MinGW)
+if(WIN32)
+    target_compile_definitions(VNNLib PRIVATE VNNLIB_BUILD_DLL)
+endif()
+
 # Ensure parser generation before building
 add_dependencies(VNNLib BNFCGen ParserGen)
 
@@ -186,6 +200,11 @@ add_executable(VNNLibParser
     ${GENERATED_SRCS}
 )
 
+# Define VNNLIB_BUILD_DLL for the executable on Windows since it compiles the sources directly
+if(WIN32)
+    target_compile_definitions(VNNLibParser PRIVATE VNNLIB_BUILD_DLL)
+endif()
+
 # Ensure parser generation happens before building executable
 add_dependencies(VNNLibParser BNFCGen ParserGen)
 
@@ -198,3 +217,58 @@ add_custom_target(clean-generated
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${GENERATED_DIR}
     COMMENT "Cleaning generated parser files"
 )
+
+# ------------------------------------------------------------
+# Optional Julia wrapper
+# ------------------------------------------------------------
+
+option(MAKE_JULIA "Build Julia wrapper library" OFF)
+
+if(MAKE_JULIA)
+    message(STATUS "Building Julia wrapper library")
+    
+    # Find JlCxx (from CxxWrap.jl)
+    find_package(JlCxx REQUIRED)
+    
+    # Define the Julia wrapper sources
+    # Note: Adjust this path if your VNNLib_julia.cpp is located elsewhere
+    set(JULIA_WRAPPER_SOURCE "${SRC_DIR}/VNNLib_julia.cpp")
+
+    add_library(VNNLib_julia SHARED ${JULIA_WRAPPER_SOURCE})
+    
+    # VNNLib_julia should NOT define VNNLIB_BUILD_DLL (it imports from VNNLib)
+    # The wrapper itself doesn't export VNNLib symbols, it wraps them
+    
+    # Ensure that the wrapper can see VNNLib headers and JlCxx headers
+    target_include_directories(VNNLib_julia
+        PRIVATE 
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${JlCxx_INCLUDE_DIRS}
+            ${INCLUDE_DIR}
+            ${INCLUDE_DIR}/util
+            ${GENERATED_DIR}
+    )
+    
+    # Link against JlCxx and the VNNLib library
+    target_link_libraries(VNNLib_julia 
+        PRIVATE
+            JlCxx::cxxwrap_julia
+            JlCxx::cxxwrap_julia_stl
+            VNNLib
+    )
+    
+    # On Windows/MinGW: enable big object files to handle many template instantiations
+    if(WIN32)
+        target_compile_options(VNNLib_julia PRIVATE -Wa,-mbig-obj)
+    endif()
+    
+    # On *nix: avoid the lib prefix, so Julia can load the shared library directly
+    set_target_properties(VNNLib_julia PROPERTIES
+        PREFIX ""  # yields "VNNLib_julia.so" instead of "libVNNLib_julia.so" 
+    )
+    
+    # Ensure parser generation happens before building Julia wrapper
+    add_dependencies(VNNLib_julia BNFCGen ParserGen VNNLib)
+    
+    message(STATUS "Julia wrapper library will be built as VNNLib_julia")
+endif()
