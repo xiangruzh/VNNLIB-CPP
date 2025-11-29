@@ -136,24 +136,24 @@ TDataType to_cpp_type_enum(JuliaDType jdt) {
     }
 }
 
-// Return a shared_ptr<TQuery> by converting the unique_ptr returned by parse_query
-std::shared_ptr<TQuery> jl_parse_query(const std::string& path) {
-    return parse_query(path);
+// Return a shared_ptr<TQuery> by converting the unique_ptr returned by parse_query_file
+std::shared_ptr<TQuery> jl_parse_query_file(const std::string& path) {
+    return parse_query_file(path);
 }
 
-// parse_query_str: return shared_ptr<TQuery> by converting the unique_ptr
-std::shared_ptr<TQuery> jl_parse_query_str(const std::string& content) {
-    return parse_query_str(content);
+// parse_query_string: return shared_ptr<TQuery> by converting the unique_ptr
+std::shared_ptr<TQuery> jl_parse_query_string(const std::string& content) {
+    return parse_query_string(content);
 }
 
-// check_query: returns result string
-std::string jl_check_query(const std::string& path) {
-    return check_query(path);
+// check_query_file: returns result string
+std::string jl_check_query_file(const std::string& path) {
+    return check_query_file(path);
 }
 
-// check_query_str: returns result string
-std::string jl_check_query_str(const std::string& content) {
-    return check_query_str(content);
+// check_query_string: returns result string
+std::string jl_check_query_string(const std::string& content) {
+    return check_query_string(content);
 }
 
 std::vector<const TNode *> jl_children_sp(const TNode& node) {
@@ -1131,10 +1131,10 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
             return out;
         });
     // Existing methods
-    mod.method("parse_query", &jl_parse_query);
-    mod.method("parse_query_str", &jl_parse_query_str);
-    mod.method("check_query", &jl_check_query);
-    mod.method("check_query_str", &jl_check_query_str);
+    mod.method("parse_query_file", &jl_parse_query_file);
+    mod.method("parse_query_string", &jl_parse_query_str);
+    mod.method("check_query_file", &jl_check_query_file);
+    mod.method("check_query_string", &jl_check_query_string);
     mod.method("transform_to_compat", [](const TQuery& q) {
         CompatTransformer transformer(&q);
         return transformer.transform();
