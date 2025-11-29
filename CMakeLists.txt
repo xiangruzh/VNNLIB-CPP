@@ -135,7 +135,7 @@ add_custom_target(ParserGen
 set(MAIN_SRCS
     ${SRC_DIR}/VNNLib.cpp
     ${SRC_DIR}/TypeChecker.cpp
-    ${SRC_DIR}/TypedAbsyn.cpp
+    ${SRC_DIR}/TypedAST.cpp
     ${SRC_DIR}/TypedBuilder.cpp
     ${SRC_DIR}/LinearArithExpr.cpp
     ${SRC_DIR}/CompatTransformer.cpp

@@ -14,7 +14,7 @@
 
 #include "Absyn.H"
 #include "json.hpp"
-#include "TypedAbsyn.h"
+#include "TypedAST.h"
 
 
 class TypeChecker; // Forward declaration

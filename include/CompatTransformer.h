@@ -6,7 +6,7 @@
 #include <limits>
 #include <cstring>
 
-#include "TypedAbsyn.h"
+#include "TypedAST.h"
 #include "DNFConverter.h"
 #include "LinearArithExpr.h"
 #include "Error.hpp"
