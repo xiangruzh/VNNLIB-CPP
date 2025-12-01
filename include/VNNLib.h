@@ -17,8 +17,8 @@
 
 #include "Error.hpp"
 
-VNNLIB_API std::unique_ptr<TQuery> parse_query(std::string path);
-VNNLIB_API std::unique_ptr<TQuery> parse_query_str(std::string content);
-VNNLIB_API std::string check_query(std::string path);
-VNNLIB_API std::string check_query_str(std::string content);
+VNNLIB_API std::unique_ptr<TQuery> parse_query_file(std::string path);
+VNNLIB_API std::unique_ptr<TQuery> parse_query_string(std::string content);
+VNNLIB_API std::string check_query_file(std::string path);
+VNNLIB_API std::string check_query_string(std::string content);
 
