@@ -1132,7 +1132,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
         });
     // Existing methods
     mod.method("parse_query_file", &jl_parse_query_file);
-    mod.method("parse_query_string", &jl_parse_query_str);
+    mod.method("parse_query_string", &jl_parse_query_string);
     mod.method("check_query_file", &jl_check_query_file);
     mod.method("check_query_string", &jl_check_query_string);
     mod.method("transform_to_compat", [](const TQuery& q) {
