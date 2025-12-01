@@ -135,7 +135,7 @@ add_custom_target(ParserGen
 set(MAIN_SRCS
     ${SRC_DIR}/VNNLib.cpp
     ${SRC_DIR}/TypeChecker.cpp
-    ${SRC_DIR}/TypedAbsyn.cpp
+    ${SRC_DIR}/TypedAST.cpp
     ${SRC_DIR}/TypedBuilder.cpp
     ${SRC_DIR}/LinearArithExpr.cpp
     ${SRC_DIR}/CompatTransformer.cpp
@@ -231,16 +231,16 @@ if(MAKE_JULIA)
     find_package(JlCxx REQUIRED)
     
     # Define the Julia wrapper sources
-    # Note: Adjust this path if your VNNLib_julia.cpp is located elsewhere
-    set(JULIA_WRAPPER_SOURCE "${SRC_DIR}/VNNLib_julia.cpp")
+    # Note: Adjust this path if your VNNLibJulia.cpp is located elsewhere
+    set(JULIA_WRAPPER_SOURCE "${SRC_DIR}/VNNLibJulia.cpp")
 
-    add_library(VNNLib_julia SHARED ${JULIA_WRAPPER_SOURCE})
+    add_library(VNNLibJulia SHARED ${JULIA_WRAPPER_SOURCE})
     
-    # VNNLib_julia should NOT define VNNLIB_BUILD_DLL (it imports from VNNLib)
+    # VNNLibJulia should NOT define VNNLIB_BUILD_DLL (it imports from VNNLib)
     # The wrapper itself doesn't export VNNLib symbols, it wraps them
     
     # Ensure that the wrapper can see VNNLib headers and JlCxx headers
-    target_include_directories(VNNLib_julia
+    target_include_directories(VNNLibJulia
         PRIVATE 
             ${CMAKE_CURRENT_SOURCE_DIR}/src
             ${JlCxx_INCLUDE_DIRS}
@@ -250,7 +250,7 @@ if(MAKE_JULIA)
     )
     
     # Link against JlCxx and the VNNLib library
-    target_link_libraries(VNNLib_julia 
+    target_link_libraries(VNNLibJulia 
         PRIVATE
             JlCxx::cxxwrap_julia
             JlCxx::cxxwrap_julia_stl
@@ -259,16 +259,16 @@ if(MAKE_JULIA)
     
     # On Windows/MinGW: enable big object files to handle many template instantiations
     if(WIN32)
-        target_compile_options(VNNLib_julia PRIVATE -Wa,-mbig-obj)
+        target_compile_options(VNNLibJulia PRIVATE -Wa,-mbig-obj)
     endif()
     
     # On *nix: avoid the lib prefix, so Julia can load the shared library directly
-    set_target_properties(VNNLib_julia PROPERTIES
-        PREFIX ""  # yields "VNNLib_julia.so" instead of "libVNNLib_julia.so" 
+    set_target_properties(VNNLibJulia PROPERTIES
+        PREFIX ""  # yields "VNNLibJulia.so" instead of "libVNNLibJulia.so" 
     )
     
     # Ensure parser generation happens before building Julia wrapper
-    add_dependencies(VNNLib_julia BNFCGen ParserGen VNNLib)
+    add_dependencies(VNNLibJulia BNFCGen ParserGen VNNLib)
     
-    message(STATUS "Julia wrapper library will be built as VNNLib_julia")
+    message(STATUS "Julia wrapper library will be built as `VNNLibJulia`")
 endif()

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <memory>
 
-#include "TypedAbsyn.h"
+#include "TypedAST.h"
 #include "Absyn.H"
 #include "VNNLibExport.h"
 

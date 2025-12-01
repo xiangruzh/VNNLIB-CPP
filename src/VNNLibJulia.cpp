@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include "VNNLib.h"
-#include "TypedAbsyn.h"
+#include "TypedAST.h"
 #include "LinearArithExpr.h"
 #include "DNFConverter.h"
 #include "CompatTransformer.h"
@@ -291,7 +291,7 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
         });
     mod.add_type<SymbolInfo>("SymbolInfo");
 
-    // Register all types and methods from TypedAbsyn.cpp
+    // Register all types and methods from TypedAST.cpp
     mod.add_type<TNode>("TNode")
         .method("children", [](const TNode& n) {
             return jl_children_sp(n);

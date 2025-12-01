@@ -7,7 +7,7 @@
 #include <iomanip>
 
 #include <unordered_map>
-#include "TypedAbsyn.h"
+#include "TypedAST.h"
 #include "Error.hpp"
 #include "VNNLibExport.h"
 

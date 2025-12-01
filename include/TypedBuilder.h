@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "TypeChecker.h"  
-#include "TypedAbsyn.h" 
+#include "TypedAST.h" 
 #include "Absyn.H"  
 
 class TypedBuilder : public TypeChecker {
