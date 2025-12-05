@@ -3,7 +3,7 @@
 // Forward declaration
 extern Query* psQuery(const char *str);
 
-std::unique_ptr<TQuery> parse_query_file(std::string path) {
+std::unique_ptr<TQuery> parseQueryFile(std::string path) {
     FILE *file = fopen(path.c_str(), "r");
     if (!file) {
         std::fprintf(stderr, "Error: Cannot open input file '%s': %s\n", path.c_str(), std::strerror(errno));
@@ -34,7 +34,7 @@ std::unique_ptr<TQuery> parse_query_file(std::string path) {
     return typed;
 }
 
-std::unique_ptr<TQuery> parse_query_string(std::string content) {
+std::unique_ptr<TQuery> parseQueryString(std::string content) {
     VNNLibQuery *parse_tree = nullptr;
     try {
         Query *query = psQuery(content.c_str());
@@ -57,7 +57,7 @@ std::unique_ptr<TQuery> parse_query_string(std::string content) {
     return typed;
 }
 
-std::string check_query_file(std::string path) {
+std::string checkQueryFile(std::string path) {
     FILE *file = fopen(path.c_str(), "r");
     if (!file) {
         std::fprintf(stderr, "Error: Cannot open input file '%s': %s\n", path.c_str(), std::strerror(errno));
@@ -86,7 +86,7 @@ std::string check_query_file(std::string path) {
     return "";
 }
 
-std::string check_query_string(std::string content) {
+std::string checkQueryString(std::string content) {
     VNNLibQuery *parse_tree = nullptr;
     try {
         Query *query = psQuery(content.c_str());

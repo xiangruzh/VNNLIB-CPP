@@ -136,24 +136,24 @@ TDataType to_cpp_type_enum(JuliaDType jdt) {
     }
 }
 
-// Return a shared_ptr<TQuery> by converting the unique_ptr returned by parse_query_file
+// Return a shared_ptr<TQuery> by converting the unique_ptr returned by parseQueryFile
 std::shared_ptr<TQuery> jl_parse_query_file(const std::string& path) {
-    return parse_query_file(path);
+    return parseQueryFile(path);
 }
 
-// parse_query_string: return shared_ptr<TQuery> by converting the unique_ptr
+// parseQueryString: return shared_ptr<TQuery> by converting the unique_ptr
 std::shared_ptr<TQuery> jl_parse_query_string(const std::string& content) {
-    return parse_query_string(content);
+    return parseQueryString(content);
 }
 
-// check_query_file: returns result string
+// checkQueryFile: returns result string
 std::string jl_check_query_file(const std::string& path) {
-    return check_query_file(path);
+    return checkQueryFile(path);
 }
 
-// check_query_string: returns result string
+// checkQueryString: returns result string
 std::string jl_check_query_string(const std::string& content) {
-    return check_query_string(content);
+    return checkQueryString(content);
 }
 
 std::vector<const TNode *> jl_children_sp(const TNode& node) {
@@ -1131,10 +1131,10 @@ JLCXX_MODULE define_julia_module(jlcxx::Module& mod) {
             return out;
         });
     // Existing methods
-    mod.method("parse_query_file", &jl_parse_query_file);
-    mod.method("parse_query_string", &jl_parse_query_string);
-    mod.method("check_query_file", &jl_check_query_file);
-    mod.method("check_query_string", &jl_check_query_string);
+    mod.method("parseQueryFile", &jl_parse_query_file);
+    mod.method("parseQueryString", &jl_parse_query_string);
+    mod.method("checkQueryFile", &jl_check_query_file);
+    mod.method("checkQueryString", &jl_check_query_string);
     mod.method("transform_to_compat", [](const TQuery& q) {
         CompatTransformer transformer(&q);
         return transformer.transform();
