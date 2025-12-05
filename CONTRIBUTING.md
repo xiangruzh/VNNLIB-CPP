@@ -42,3 +42,5 @@ bnfc grammar/grammar.cf --cpp -o src/generated/
 # Making a release
 
 To make a release: 
+
+1. Update `README.md` with new entry to compatability table. 
