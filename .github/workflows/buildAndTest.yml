@@ -15,6 +15,23 @@ jobs:
               with:
                 submodules: recursive
             
+            - name: Build the project
+              run: |
+                echo "Building the parser"
+                mkdir -p build
+                cd build
+                cmake -DNO_BNFC=ON ..
+                make -j$(nproc)
+                echo "Build completed successfully"
+
+    build-and-test-from-grammar:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+              with:
+                submodules: recursive
+            
             - name: Cache Haskell dependencies
               uses: actions/cache@v3
               with:
@@ -39,6 +56,6 @@ jobs:
                 echo "Building the parser"
                 mkdir -p build
                 cd build
-                cmake ..
+                cmake -DNO_BNFC=OFF ..
                 make -j$(nproc)
                 echo "Build completed successfully"

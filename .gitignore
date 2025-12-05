@@ -3,7 +3,7 @@
 __pycache__
 
 # BNFC generated files in parsers
-src/generated/
+*.bak
 
 # Build artifacts for parsers
 build/
