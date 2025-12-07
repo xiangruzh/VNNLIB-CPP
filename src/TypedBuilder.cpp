@@ -274,7 +274,7 @@ void TypedBuilder::visitHiddenDef(HiddenDef* p) {
     TypeChecker::visitHiddenDef(p);
 
     NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
-    std::string onnxNameStr = onnxName->string_;
+    std::string onnxNameStr = onnxName->onnxstring_;
     auto symbol = std::make_shared<SymbolInfo>(
         p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Hidden, onnxNameStr
     );
@@ -434,8 +434,12 @@ void TypedBuilder::visitIdent(Ident x) {
     TypeChecker::visitIdent(x);
 }
 
-void TypedBuilder::visitVariableName(VariableName *x) {
-    TypeChecker::visitVariableName(x);
+void TypedBuilder::visitOnnxString(OnnxString x) {
+    TypeChecker::visitOnnxString(x);
+}
+
+void TypedBuilder::visitVariableName(VariableName *p) {
+    TypeChecker::visitVariableName(p);
 }
 
 void TypedBuilder::visitNumber(Number *p) {
