@@ -10,8 +10,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ------------------------------------------------------------
 
 if(MSVC)
-    add_compile_options(/W4 /permissive- /EHsc /wd4100 /wd4251 /wd4275 /wd4005 /wd4244 /wd4267)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS YY_NO_UNISTD_H)
+    add_compile_options(/W4 /permissive- /EHsc /wd4100 /wd4251 /wd4275 /wd4005 /wd4244 /wd4267 /FIio.h)
+    add_compile_definitions(
+        _CRT_SECURE_NO_WARNINGS 
+        _CRT_NONSTDC_NO_WARNINGS
+        YY_NO_UNISTD_H
+        isatty=_isatty
+        fileno=_fileno
+        strdup=_strdup
+    )
 else()
     add_compile_options(-Wall -Wextra -g -Wno-unused-parameter -Wno-unused-function)
 endif()
