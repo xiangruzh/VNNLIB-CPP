@@ -33,3 +33,18 @@ if(EXISTS "${LEXER_FILE}")
 else()
     message(WARNING "File not found: ${LEXER_FILE}")
 endif()
+
+# Patch Lexer.C to include unistd.h for Linux/macOS 
+set(LEXER_C_FILE "${GENERATED_DIR}/Lexer.C")
+if(EXISTS "${LEXER_C_FILE}")
+    file(READ "${LEXER_C_FILE}" CONTENT)
+    # We need to ensure unistd.h is included on non-Windows systems
+    if(NOT CONTENT MATCHES "#include <unistd.h>")
+        string(REPLACE "#include <stdio.h>" "#include <stdio.h>\n#ifndef _WIN32\n#include <unistd.h>\n#endif" CONTENT "${CONTENT}")
+        file(WRITE "${LEXER_C_FILE}" "${CONTENT}")
+        message(STATUS "Patched ${LEXER_C_FILE} to include unistd.h on non-Windows systems")
+    endif()
+else()
+    # Lexer.C might not exist yet if we are patching before Flex runs
+    message(STATUS "${LEXER_C_FILE} not found (yet), skipping patch")
+endif()

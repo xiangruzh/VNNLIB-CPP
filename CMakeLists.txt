@@ -114,10 +114,12 @@ if(BNFC)
 
     add_custom_command(
         OUTPUT ${GENERATED_DIR}/Lexer.C
+        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
         COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
+        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
         DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
         WORKING_DIRECTORY ${GENERATED_DIR}
-        COMMENT "Running Flex on grammar.l"
+        COMMENT "Patching grammar.l, running Flex, and patching Lexer.C"
         VERBATIM
     )
 
