@@ -20,7 +20,7 @@ jobs:
                 echo "Building the parser"
                 mkdir -p build
                 cd build
-                cmake -DNO_BNFC=ON ..
+                cmake -DBNFC=OFF ..
                 make -j$(nproc)
                 echo "Build completed successfully"
 
@@ -56,6 +56,6 @@ jobs:
                 echo "Building the parser"
                 mkdir -p build
                 cd build
-                cmake -DNO_BNFC=OFF ..
+                cmake -DBNFC=ON ..
                 make -j$(nproc)
                 echo "Build completed successfully"
