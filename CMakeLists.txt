@@ -105,9 +105,10 @@ if(BNFC)
     add_custom_command(
         OUTPUT ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Bison.H
         COMMAND ${BISON_EXECUTABLE} -t -pgrammar_ -d ${GENERATED_DIR}/grammar.y -o ${GENERATED_DIR}/Parser.C
+        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
         DEPENDS ${GENERATED_DIR}/grammar.y BNFCGen
         WORKING_DIRECTORY ${GENERATED_DIR}
-        COMMENT "Running Bison on grammar.y"
+        COMMENT "Running Bison on grammar.y and patching output"
         VERBATIM
     )
 

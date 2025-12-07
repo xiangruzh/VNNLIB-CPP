@@ -2,7 +2,7 @@
 
 /* Lexer definition for use with FLex */
 
-%option noyywrap noinput nounput
+%option noyywrap nounistd noinput nounput
 %option reentrant bison-bridge bison-locations
 
 %{

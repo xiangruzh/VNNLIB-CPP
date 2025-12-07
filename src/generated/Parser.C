@@ -94,7 +94,7 @@ typedef struct yy_buffer_state *YY_BUFFER_STATE;
 extern YY_BUFFER_STATE grammar__scan_string(const char *str, yyscan_t scanner);
 extern void grammar__delete_buffer(YY_BUFFER_STATE buf, yyscan_t scanner);
 
-extern void grammar_lex_destroy(yyscan_t scanner);
+extern int grammar_lex_destroy(yyscan_t scanner);
 extern char* grammar_get_text(yyscan_t scanner);
 
 extern yyscan_t grammar__initialize_lexer(FILE * inp);
