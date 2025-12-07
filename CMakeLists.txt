@@ -10,7 +10,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ------------------------------------------------------------
 
 if(MSVC)
-    add_compile_options(/W4 /permissive- /EHsc)
+    add_compile_options(/W4 /permissive- /EHsc /wd4100 /wd4251)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
     add_compile_options(-Wall -Wextra -g -Wno-unused-parameter -Wno-unused-function)
 endif()
@@ -153,7 +154,9 @@ set(GENERATED_SRCS
 set_source_files_properties(${GENERATED_SRCS} PROPERTIES LANGUAGE CXX)
 
 # Add specific compiler flags for generated files (suppress warnings)
-set_source_files_properties(${GENERATED_SRCS} PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion")
+if(NOT MSVC)
+    set_source_files_properties(${GENERATED_SRCS} PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion")
+endif()
 
 # ------------------------------------------------------------
 # Library
