@@ -122,7 +122,7 @@ if(BNFC)
     add_custom_command(
         OUTPUT ${GENERATED_DIR}/Lexer.C
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
-        COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
+        COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ --noline -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
         COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
         DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
         WORKING_DIRECTORY ${GENERATED_DIR}
