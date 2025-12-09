@@ -101,11 +101,18 @@ if(BNFC)
     # Bison / Flex
     # ------------------------------------------------------------
 
+    # Configure the patch script with the correct GENERATED_DIR
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
+        @ONLY
+    )
+
     # Custom commands for Bison and Flex
     add_custom_command(
         OUTPUT ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Bison.H
         COMMAND ${BISON_EXECUTABLE} -t -pgrammar_ -d ${GENERATED_DIR}/grammar.y -o ${GENERATED_DIR}/Parser.C
-        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
         DEPENDS ${GENERATED_DIR}/grammar.y BNFCGen
         WORKING_DIRECTORY ${GENERATED_DIR}
         COMMENT "Running Bison on grammar.y and patching output"
@@ -114,9 +121,9 @@ if(BNFC)
 
     add_custom_command(
         OUTPUT ${GENERATED_DIR}/Lexer.C
-        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
         COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
-        COMMAND ${CMAKE_COMMAND} -DGENERATED_DIR=${GENERATED_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchGenerated.cmake
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/PatchGenerated.cmake
         DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
         WORKING_DIRECTORY ${GENERATED_DIR}
         COMMENT "Patching grammar.l, running Flex, and patching Lexer.C"
