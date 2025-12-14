@@ -6,8 +6,38 @@ To setup the project to begin development:
 
 2. Navigate to the repository folder and then initialise the submodules using:
 ```bash
-git submodule init
-git submodule update
+git submodule update --init --recursive
+```
+
+# Building and Testing
+
+To build the project locally:
+
+1. Create a build directory:
+```bash
+mkdir build
+cd build
+```
+
+2. Configure the project using CMake:
+```bash
+cmake ..
+```
+To enable parser generation (requires BNFC, Flex, and Bison), use:
+```bash
+cmake -DBNFC=ON ..
+```
+
+3. Build the project:
+```bash
+make
+```
+
+To run the tests, use the `VNNLibParser` executable against the VNNLIB test files:
+```bash
+for file in ../grammar/test/*.vnnlib; do
+    ./bin/VNNLibParser check "$file"
+done
 ```
 
 # Updating the grammar
@@ -29,9 +59,11 @@ cd ..
 ```
 where `REF` is either a commit hash or a tag for the commit you want to update to.
 
-3. Build the parser for the new grammar. 
+2. Build the parser for the new grammar. 
+It is recommended to use CMake to generate the parser files, as it handles patching the source files for cross-platform compatibility.
 ```bash
-bnfc grammar/grammar.cf --cpp -o src/generated/
+cmake -S . -B build -DBNFC=ON
+cmake --build build
 ```
 
 3. Add the new files and the new submodule commit, and then commit and push the changes.
@@ -43,4 +75,15 @@ bnfc grammar/grammar.cf --cpp -o src/generated/
 
 To make a release: 
 
-1. Update `README.md` with new entry to compatability table. 
+1. Update `README.md` with a new entry to the compatibility table. 
+
+2. Update `CHANGELOG.md` with the new version and changes.
+
+3. Create a new Release on GitHub:
+   - Tag the version (e.g., `v1.0.0`).
+   - Provide a title and description.
+   - Publish the release.
+
+4. The "Build and Deploy" GitHub workflow will automatically trigger:
+   - It builds the shared libraries for Linux (`libVNNLib.so`), Windows (`VNNLib.dll`), and macOS (`libVNNLib.dylib`).
+   - It uploads these artifacts to the GitHub Release. 
