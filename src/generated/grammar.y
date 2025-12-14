@@ -117,9 +117,9 @@ extern int yylex(YYSTYPE *lvalp, YYLTYPE *llocp, yyscan_t scanner);
 %token          _KW_and         /* and */
 %token          _KW_or          /* or */
 %token<_string> T_Number        /* Number */
+%token<_string> T_OnnxString    /* OnnxString */
 %token<_string> T_VariableName  /* VariableName */
 %token<_string> T_VersionToken  /* VersionToken */
-%token<_string> _STRING_
 
 %type <_versiontoken> VersionToken
 %type <_number> Number
@@ -187,7 +187,7 @@ ListAssertion : Assertion { $$ = new ListAssertion(); $$->push_back($1); }
 ;
 ElementType : VariableName { $$ = new DType($1); }
 ;
-OnnxName : _STRING_ { $$ = new NodeName($1); }
+OnnxName : T_OnnxString { $$ = new NodeName($1); }
 ;
 InputDefinition : _SYMB_15 VariableName ElementType TensorShape _RPAREN { $$ = new InputDef($2, $3, $4); }
 ;

@@ -106,6 +106,7 @@ class PrintAbsyn : public Visitor
   void visitVersionToken(String s);
   void visitNumber(String s);
   void visitVariableName(String s);
+  void visitOnnxString(String s);
  protected:
   char *buf_;
   size_t cur_, buf_size;
@@ -265,6 +266,7 @@ class ShowAbsyn : public Visitor
   void visitVersionToken(String s);
   void visitNumber(String s);
   void visitVariableName(String s);
+  void visitOnnxString(String s);
  protected:
   char *buf_;
   size_t cur_, buf_size;

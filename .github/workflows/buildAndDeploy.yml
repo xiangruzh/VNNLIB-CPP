@@ -1,0 +1,64 @@
+name: Build and Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: libVNNLib.so
+            build_dir: build-linux
+          - os: ubuntu-latest
+            artifact_name: libVNNLib.dll
+            build_dir: build-windows
+          - os: macos-latest
+            artifact_name: libVNNLib.dylib
+            build_dir: build-macos
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          if [[ "${{ matrix.artifact_name }}" == "libVNNLib.dll" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y mingw-w64
+          fi
+
+      - name: Configure CMake
+        run: |
+          if [[ "${{ matrix.artifact_name }}" == "libVNNLib.dll" ]]; then
+            cmake -S . -B ${{ matrix.build_dir }} \
+              -DCMAKE_SYSTEM_NAME=Windows \
+              -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+              -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DBNFC=OFF
+          else
+            cmake -S . -B ${{ matrix.build_dir }} -DCMAKE_BUILD_TYPE=Release -DBNFC=OFF
+          fi
+
+      - name: Build binaries
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            cmake --build ${{ matrix.build_dir }} --config Release -- -j$(sysctl -n hw.ncpu)
+          else
+            cmake --build ${{ matrix.build_dir }} --config Release -- -j$(nproc)
+          fi
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: bin/${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

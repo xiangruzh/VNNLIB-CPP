@@ -80,9 +80,9 @@ extern int grammar_debug;
     _KW_and = 281,                 /* _KW_and  */
     _KW_or = 282,                  /* _KW_or  */
     T_Number = 283,                /* T_Number  */
-    T_VariableName = 284,          /* T_VariableName  */
-    T_VersionToken = 285,          /* T_VersionToken  */
-    _STRING_ = 286                 /* _STRING_  */
+    T_OnnxString = 284,            /* T_OnnxString  */
+    T_VariableName = 285,          /* T_VariableName  */
+    T_VersionToken = 286           /* T_VersionToken  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif

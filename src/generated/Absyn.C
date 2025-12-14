@@ -1009,15 +1009,15 @@ DType *DType::clone() const
 
 
 /********************   NodeName    ********************/
-NodeName::NodeName(String p1)
+NodeName::NodeName(OnnxString p1)
 {
-  string_ = p1;
+  onnxstring_ = p1;
 
 }
 
 NodeName::NodeName(const NodeName & other)
 {
-  string_ = other.string_;
+  onnxstring_ = other.onnxstring_;
 
 }
 
@@ -1030,7 +1030,7 @@ NodeName &NodeName::operator=(const NodeName & other)
 
 void NodeName::swap(NodeName & other)
 {
-  std::swap(string_, other.string_);
+  std::swap(onnxstring_, other.onnxstring_);
 
 }
 
