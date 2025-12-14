@@ -16,6 +16,13 @@ else()
     add_compile_options(-Wall -Wextra -g -Wno-unused-parameter -Wno-unused-function)
 endif()
 
+if(MINGW)
+    message(STATUS "Enabling static linkage of libgcc and libstdc++ for MinGW")
+    add_compile_options(-static-libgcc -static-libstdc++)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+endif()
+
 # ------------------------------------------------------------
 # Directories
 # ------------------------------------------------------------
