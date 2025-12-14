@@ -6,21 +6,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ------------------------------------------------------------
+# Find required tools
+# ------------------------------------------------------------
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
+# ------------------------------------------------------------
 # Compiler flags
 # ------------------------------------------------------------
 
 if(MSVC)
-    add_compile_options(/W4 /permissive- /EHsc /wd4100 /wd4251 /wd4275 /wd4005 /wd4244 /wd4267)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS YY_NO_UNISTD_H)
+    add_compile_options(/W4 /permissive- /EHsc)
 else()
     add_compile_options(-Wall -Wextra -g -Wno-unused-parameter -Wno-unused-function)
-endif()
-
-if(MINGW)
-    message(STATUS "Enabling static linkage of libgcc and libstdc++ for MinGW")
-    add_compile_options(-static-libgcc -static-libstdc++)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif()
 
 # ------------------------------------------------------------
@@ -47,14 +46,14 @@ include_directories(
 # BNFC generation
 # ------------------------------------------------------------
 
-option(BNFC "Run BNFC to generate parser files" OFF)
+option(NO_BNFC "Do not run BNFC to generate parser files; requires precompiled parser files at ${GENERATED_DIR}" OFF)
 
-if(BNFC)
+if(NO_BNFC)
+    message(STATUS "Skipping BNFC generation as NO_BNFC is set")
+else()
     message(STATUS "BNFC generation enabled")
 
     find_program(BNFC_EXECUTABLE bnfc REQUIRED)
-    find_package(BISON REQUIRED)
-    find_package(FLEX REQUIRED)
 
     set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
 
@@ -79,57 +78,55 @@ if(BNFC)
         COMMENT "Running BNFC on ${BNFC_INPUT}"
         VERBATIM
     )
-
-    add_custom_target(BNFCGen
-        DEPENDS
-            ${GENERATED_DIR}/Absyn.C
-            ${GENERATED_DIR}/Absyn.H
-            ${GENERATED_DIR}/Printer.C
-            ${GENERATED_DIR}/Printer.H
-            ${GENERATED_DIR}/Buffer.C
-            ${GENERATED_DIR}/Buffer.H
-            ${GENERATED_DIR}/grammar.y
-            ${GENERATED_DIR}/grammar.l
-            ${GENERATED_DIR}/Parser.H
-            ${GENERATED_DIR}/ParserError.H
-            ${GENERATED_DIR}/Skeleton.C
-            ${GENERATED_DIR}/Skeleton.H
-            ${GENERATED_DIR}/Test.C
-    )
-
-    # ------------------------------------------------------------
-    # Bison / Flex
-    # ------------------------------------------------------------
-
-    # Custom commands for Bison and Flex
-    add_custom_command(
-        OUTPUT ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Bison.H
-        COMMAND ${BISON_EXECUTABLE} -t -pgrammar_ -d ${GENERATED_DIR}/grammar.y -o ${GENERATED_DIR}/Parser.C
-        DEPENDS ${GENERATED_DIR}/grammar.y BNFCGen
-        WORKING_DIRECTORY ${GENERATED_DIR}
-        COMMENT "Running Bison on grammar.y"
-        VERBATIM
-    )
-
-    add_custom_command(
-        OUTPUT ${GENERATED_DIR}/Lexer.C
-        COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
-        DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
-        WORKING_DIRECTORY ${GENERATED_DIR}
-        COMMENT "Running Flex on grammar.l"
-        VERBATIM
-    )
-
-    # Create targets for parser generation
-    add_custom_target(ParserGen
-        DEPENDS ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/Bison.H
-    )
-
-else()
-    message(STATUS "Skipping BNFC generation as BNFC is not set")
-    add_custom_target(BNFCGen)
-    add_custom_target(ParserGen)
 endif()
+
+add_custom_target(BNFCGen
+    DEPENDS
+        ${GENERATED_DIR}/Absyn.C
+        ${GENERATED_DIR}/Absyn.H
+        ${GENERATED_DIR}/Printer.C
+        ${GENERATED_DIR}/Printer.H
+        ${GENERATED_DIR}/Buffer.C
+        ${GENERATED_DIR}/Buffer.H
+        ${GENERATED_DIR}/grammar.y
+        ${GENERATED_DIR}/grammar.l
+        ${GENERATED_DIR}/Parser.H
+        ${GENERATED_DIR}/ParserError.H
+        ${GENERATED_DIR}/Skeleton.C
+        ${GENERATED_DIR}/Skeleton.H
+        ${GENERATED_DIR}/Test.C
+)
+
+# ------------------------------------------------------------
+# Bison / Flex
+# ------------------------------------------------------------
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
+# Custom commands for Bison and Flex (similar to Makefile approach)
+add_custom_command(
+    OUTPUT ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Bison.H
+    COMMAND ${BISON_EXECUTABLE} -t -pgrammar_ -d ${GENERATED_DIR}/grammar.y -o ${GENERATED_DIR}/Parser.C
+    DEPENDS ${GENERATED_DIR}/grammar.y BNFCGen
+    WORKING_DIRECTORY ${GENERATED_DIR}
+    COMMENT "Running Bison on grammar.y"
+    VERBATIM
+)
+
+add_custom_command(
+    OUTPUT ${GENERATED_DIR}/Lexer.C
+    COMMAND ${FLEX_EXECUTABLE} -Pgrammar_ -o${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/grammar.l
+    DEPENDS ${GENERATED_DIR}/grammar.l ${GENERATED_DIR}/Bison.H BNFCGen
+    WORKING_DIRECTORY ${GENERATED_DIR}
+    COMMENT "Running Flex on grammar.l"
+    VERBATIM
+)
+
+# Create targets for parser generation
+add_custom_target(ParserGen
+    DEPENDS ${GENERATED_DIR}/Parser.C ${GENERATED_DIR}/Lexer.C ${GENERATED_DIR}/Bison.H
+)
 
 # ------------------------------------------------------------
 # Sources
@@ -161,9 +158,7 @@ set(GENERATED_SRCS
 set_source_files_properties(${GENERATED_SRCS} PROPERTIES LANGUAGE CXX)
 
 # Add specific compiler flags for generated files (suppress warnings)
-if(NOT MSVC)
-    set_source_files_properties(${GENERATED_SRCS} PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion")
-endif()
+set_source_files_properties(${GENERATED_SRCS} PROPERTIES COMPILE_FLAGS "-Wno-sign-conversion")
 
 # ------------------------------------------------------------
 # Library

@@ -17,7 +17,6 @@ typedef std::string String;
 typedef std::string Ident;
 
 
-typedef std::string OnnxString;
 
 
 /********************   Forward Declarations    ********************/
@@ -142,7 +141,6 @@ public:
   virtual void visitDouble(Double x) = 0;
   virtual void visitString(String x) = 0;
   virtual void visitIdent(Ident x) = 0;
-  virtual void visitOnnxString(OnnxString x) = 0;
 
 };
 
@@ -571,11 +569,11 @@ public:
 class NodeName : public OnnxName
 {
 public:
-  OnnxString onnxstring_;
+  String string_;
 
   NodeName(const NodeName &);
   NodeName &operator=(const NodeName &);
-  NodeName(OnnxString p1);
+  NodeName(String p1);
   ~NodeName();
   virtual void accept(Visitor *v);
   virtual NodeName *clone() const;
