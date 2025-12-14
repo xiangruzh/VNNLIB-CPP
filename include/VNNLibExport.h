@@ -1,10 +1,14 @@
 #pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
-  #ifdef VNNLIB_BUILD_DLL
-    #define VNNLIB_API __declspec(dllexport)
+  #if defined(_MSC_VER)
+    #ifdef VNNLIB_BUILD_DLL
+      #define VNNLIB_API __declspec(dllexport)
+    #else
+      #define VNNLIB_API __declspec(dllimport)
+    #endif
   #else
-    #define VNNLIB_API __declspec(dllimport)
+    #define VNNLIB_API __attribute__((visibility("default")))
   #endif
 #else
   #if defined(__GNUC__) || defined(__clang__)
