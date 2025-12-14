@@ -1,0 +1,31 @@
+message(STATUS "Patching generated files in @GENERATED_DIR@")
+
+# 1. Fix return type mismatch (void -> int) for grammar_lex_destroy in Parser.C and grammar.y
+foreach(FILE_NAME "Parser.C" "grammar.y")
+    set(FILE_PATH "@GENERATED_DIR@/${FILE_NAME}")
+    if(EXISTS "${FILE_PATH}")
+        file(READ "${FILE_PATH}" CONTENT)
+        string(REPLACE "extern void grammar_lex_destroy" "extern int grammar_lex_destroy" CONTENT "${CONTENT}")
+        file(WRITE "${FILE_PATH}" "${CONTENT}")
+    endif()
+endforeach()
+
+# 2. Add %option nounistd to grammar.l for Windows compatibility
+set(LEXER_FILE "@GENERATED_DIR@/grammar.l")
+if(EXISTS "${LEXER_FILE}")
+    file(READ "${LEXER_FILE}" CONTENT)
+    if(NOT CONTENT MATCHES "%option.*nounistd")
+        string(REPLACE "%option noyywrap" "%option noyywrap nounistd" CONTENT "${CONTENT}")
+        file(WRITE "${LEXER_FILE}" "${CONTENT}")
+    endif()
+endif()
+
+# 3. Re-add <unistd.h> to Lexer.C for Linux/macOS (guarded by _WIN32)
+set(LEXER_C_FILE "@GENERATED_DIR@/Lexer.C")
+if(EXISTS "${LEXER_C_FILE}")
+    file(READ "${LEXER_C_FILE}" CONTENT)
+    if(NOT CONTENT MATCHES "#ifndef _WIN32\n#include <unistd.h>")
+        string(REPLACE "<stdio.h>" "<stdio.h>\n#ifndef _WIN32\n#include <unistd.h>\n#endif" CONTENT "${CONTENT}")
+        file(WRITE "${LEXER_C_FILE}" "${CONTENT}")
+    endif()
+endif()

@@ -498,7 +498,7 @@ void PrintAbsyn::visitNodeName(NodeName *p)
   int oldi = _i_;
   if (oldi > 0) render(_L_PAREN);
 
-  visitString(p->string_);
+  visitOnnxString(p->onnxstring_);
 
   if (oldi > 0) render(_R_PAREN);
   _i_ = oldi;
@@ -761,6 +761,12 @@ void PrintAbsyn::visitNumber(String s)
 
 
 void PrintAbsyn::visitVariableName(String s)
+{
+  render(s);
+}
+
+
+void PrintAbsyn::visitOnnxString(String s)
 {
   render(s);
 }
@@ -1065,7 +1071,7 @@ void ShowAbsyn::visitNodeName(NodeName *p)
   bufAppend('(');
   bufAppend("NodeName");
   bufAppend(' ');
-  visitString(p->string_);
+  visitOnnxString(p->onnxstring_);
   bufAppend(')');
 }
 void ShowAbsyn::visitInputDefinition(InputDefinition *p) {} //abstract class
@@ -1300,6 +1306,14 @@ void ShowAbsyn::visitNumber(String s)
 
 
 void ShowAbsyn::visitVariableName(String s)
+{
+  bufAppend('\"');
+  bufAppend(s);
+  bufAppend('\"');
+}
+
+
+void ShowAbsyn::visitOnnxString(String s)
 {
   bufAppend('\"');
   bufAppend(s);

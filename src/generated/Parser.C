@@ -94,7 +94,7 @@ typedef struct yy_buffer_state *YY_BUFFER_STATE;
 extern YY_BUFFER_STATE grammar__scan_string(const char *str, yyscan_t scanner);
 extern void grammar__delete_buffer(YY_BUFFER_STATE buf, yyscan_t scanner);
 
-extern void grammar_lex_destroy(yyscan_t scanner);
+extern int grammar_lex_destroy(yyscan_t scanner);
 extern char* grammar_get_text(yyscan_t scanner);
 
 extern yyscan_t grammar__initialize_lexer(FILE * inp);
@@ -158,9 +158,9 @@ enum yysymbol_kind_t
   YYSYMBOL__KW_and = 26,                   /* _KW_and  */
   YYSYMBOL__KW_or = 27,                    /* _KW_or  */
   YYSYMBOL_T_Number = 28,                  /* T_Number  */
-  YYSYMBOL_T_VariableName = 29,            /* T_VariableName  */
-  YYSYMBOL_T_VersionToken = 30,            /* T_VersionToken  */
-  YYSYMBOL__STRING_ = 31,                  /* _STRING_  */
+  YYSYMBOL_T_OnnxString = 29,              /* T_OnnxString  */
+  YYSYMBOL_T_VariableName = 30,            /* T_VariableName  */
+  YYSYMBOL_T_VersionToken = 31,            /* T_VersionToken  */
   YYSYMBOL_YYACCEPT = 32,                  /* $accept  */
   YYSYMBOL_ListNumber = 33,                /* ListNumber  */
   YYSYMBOL_TensorShape = 34,               /* TensorShape  */
@@ -531,7 +531,7 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  9
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   103
+#define YYLAST   108
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  32
@@ -617,14 +617,15 @@ static const char *const yytname[] =
   "_LPAREN", "_SYMB_14", "_SYMB_17", "_SYMB_15", "_SYMB_20", "_SYMB_16",
   "_SYMB_19", "_SYMB_18", "_SYMB_21", "_RPAREN", "_STAR", "_PLUS",
   "_COMMA", "_MINUS", "_LT", "_LDARROW", "_DEQ", "_GT", "_GTEQ", "_LBRACK",
-  "_RBRACK", "_KW_and", "_KW_or", "T_Number", "T_VariableName",
-  "T_VersionToken", "_STRING_", "$accept", "ListNumber", "TensorShape",
-  "ArithExpr", "ListArithExpr", "BoolExpr", "ListBoolExpr", "Assertion",
-  "ListAssertion", "ElementType", "OnnxName", "InputDefinition",
-  "OutputDefinition", "HiddenDefinition", "ListInputDefinition",
-  "ListHiddenDefinition", "ListOutputDefinition", "NetworkEquivalence",
-  "ListNetworkEquivalence", "NetworkDefinition", "ListNetworkDefinition",
-  "Version", "Query", "VersionToken", "Number", "VariableName", YY_NULLPTR
+  "_RBRACK", "_KW_and", "_KW_or", "T_Number", "T_OnnxString",
+  "T_VariableName", "T_VersionToken", "$accept", "ListNumber",
+  "TensorShape", "ArithExpr", "ListArithExpr", "BoolExpr", "ListBoolExpr",
+  "Assertion", "ListAssertion", "ElementType", "OnnxName",
+  "InputDefinition", "OutputDefinition", "HiddenDefinition",
+  "ListInputDefinition", "ListHiddenDefinition", "ListOutputDefinition",
+  "NetworkEquivalence", "ListNetworkEquivalence", "NetworkDefinition",
+  "ListNetworkDefinition", "Version", "Query", "VersionToken", "Number",
+  "VariableName", YY_NULLPTR
 };
 
 static const char *
@@ -634,7 +635,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-86)
+#define YYPACT_NINF (-85)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -648,18 +649,18 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      23,   -11,    29,    46,   -86,    48,    36,    29,    58,   -86,
-     -86,   -86,   -86,   -86,    61,    58,   -86,    43,    22,    53,
-     -86,    36,    36,    36,    60,   -86,   -86,     4,     4,     4,
-       4,     4,     4,    61,    61,   -86,    36,    55,    56,   -86,
-      51,    41,   -86,     4,   -86,    47,     4,     4,     4,     4,
-       4,    61,    62,    63,    50,   -86,   -86,   -86,    36,    36,
-      65,   -86,    64,     4,     4,     4,    66,    54,    67,    69,
-      70,    71,    72,   -86,   -86,   -86,    35,    73,    36,    36,
-     -86,   -86,     4,    74,    75,     6,   -86,    68,    77,   -86,
-     -86,   -86,   -86,   -86,   -86,    76,   -86,    50,    50,   -86,
-     -86,   -86,   -86,    78,   -86,    54,   -86,    59,    81,   -86,
-     -86,   -86,    82,   -86,   -86
+      -4,     2,    26,    41,   -85,    31,    34,    26,    52,   -85,
+     -85,   -85,   -85,   -85,    61,    52,   -85,    49,    28,    53,
+     -85,    34,    34,    34,    60,   -85,   -85,    14,    14,    14,
+      14,    14,    14,    61,    61,   -85,    34,    55,    56,   -85,
+      21,    47,   -85,    14,   -85,    50,    14,    14,    14,    14,
+      14,    61,    57,    62,    51,   -85,   -85,   -85,    34,    34,
+      67,   -85,    64,    14,    14,    14,    65,    54,    66,    69,
+      70,    71,    72,   -85,   -85,   -85,    18,    73,    34,    34,
+     -85,   -85,    14,    74,    75,     6,   -85,    68,    77,   -85,
+     -85,   -85,   -85,   -85,   -85,    76,   -85,    51,    51,   -85,
+     -85,   -85,   -85,    78,   -85,    54,   -85,    79,    81,   -85,
+     -85,   -85,    82,   -85,   -85
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -684,9 +685,9 @@ static const yytype_int8 yydefact[] =
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -86,   -68,   -85,   -25,   -35,    83,   -20,   -86,    84,   -51,
-     -86,   -86,   -86,   -86,    79,   -86,    19,   -86,   -86,   -86,
-      91,   -86,   -86,   -86,   -66,    -6
+     -85,   -68,   -84,   -25,   -26,    83,   -22,   -85,    84,   -52,
+     -85,   -85,   -85,   -85,    80,   -85,    30,   -85,   -85,   -85,
+      91,   -85,   -85,   -85,   -66,    -6
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
@@ -702,40 +703,40 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      12,    88,    43,    46,    47,    48,    49,    50,    95,    41,
-      88,    41,   107,   108,    53,    36,    37,    38,    66,     4,
-     102,    68,    69,    70,    71,    72,    27,    97,    98,    84,
-      55,    73,    42,    11,    42,    11,     1,   110,     6,    88,
-      85,    28,    29,    30,    31,    32,     9,    99,    33,    34,
-     103,    21,    78,    79,    22,    23,    63,    64,    58,    65,
-      94,    59,    10,    42,    14,    11,    18,    35,    21,    56,
-      57,    67,    55,    55,    76,    59,    74,    75,    81,    80,
-      86,    89,    42,    90,    91,    92,    93,    96,   100,   101,
-     111,     0,   109,   104,   105,   113,   114,    19,    13,    20,
-       0,   106,     0,    39
+      12,    88,    43,    46,    47,    48,    49,    50,    95,     1,
+      88,    41,    53,   107,   108,    36,    37,    38,    66,    41,
+     102,    68,    69,    70,    71,    72,    97,    98,    58,    73,
+      55,    59,    27,     4,    42,     6,    11,   110,    84,    88,
+      85,     9,    42,    94,    11,    10,    42,    28,    29,    30,
+      31,    32,    78,    79,    33,    34,    99,    21,    14,   103,
+      22,    23,    63,    64,    11,    65,    18,    35,    21,    56,
+      57,    74,    55,    55,    67,    76,    75,    59,    81,    86,
+      89,     0,    42,    90,    91,    92,    93,    96,   100,   101,
+      80,     0,   109,   104,   105,   113,   114,    19,    13,    20,
+       0,   106,     0,     0,    39,     0,     0,     0,   111
 };
 
 static const yytype_int8 yycheck[] =
 {
-       6,    67,    27,    28,    29,    30,    31,    32,    76,     5,
-      76,     5,    97,    98,    34,    21,    22,    23,    43,    30,
-      14,    46,    47,    48,    49,    50,     4,    78,    79,    64,
-      36,    51,    28,    29,    28,    29,    13,   105,     9,   105,
-      65,    19,    20,    21,    22,    23,     0,    82,    26,    27,
-      85,     8,    58,    59,    11,    12,    15,    16,     7,    18,
-      25,    10,    14,    28,     6,    29,     5,    14,     8,    14,
-      14,    24,    78,    79,    24,    10,    14,    14,    14,    60,
-      14,    14,    28,    14,    14,    14,    14,    14,    14,    14,
-      31,    -1,    14,    25,    17,    14,    14,    14,     7,    15,
-      -1,    25,    -1,    24
+       6,    67,    27,    28,    29,    30,    31,    32,    76,    13,
+      76,     5,    34,    97,    98,    21,    22,    23,    43,     5,
+      14,    46,    47,    48,    49,    50,    78,    79,     7,    51,
+      36,    10,     4,    31,    28,     9,    30,   105,    64,   105,
+      65,     0,    28,    25,    30,    14,    28,    19,    20,    21,
+      22,    23,    58,    59,    26,    27,    82,     8,     6,    85,
+      11,    12,    15,    16,    30,    18,     5,    14,     8,    14,
+      14,    14,    78,    79,    24,    24,    14,    10,    14,    14,
+      14,    -1,    28,    14,    14,    14,    14,    14,    14,    14,
+      60,    -1,    14,    25,    17,    14,    14,    14,     7,    15,
+      -1,    25,    -1,    -1,    24,    -1,    -1,    -1,    29
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,    13,    53,    54,    30,    55,     9,    51,    52,     0,
-      14,    29,    57,    52,     6,    39,    40,    50,     5,    37,
+       0,    13,    53,    54,    31,    55,     9,    51,    52,     0,
+      14,    30,    57,    52,     6,    39,    40,    50,     5,    37,
       40,     8,    11,    12,    43,    46,    49,     4,    19,    20,
       21,    22,    23,    26,    27,    14,    57,    57,    57,    46,
       47,     5,    28,    35,    56,    57,    35,    35,    35,    35,
@@ -745,7 +746,7 @@ static const yytype_int8 yystos[] =
       48,    14,    35,    36,    36,    35,    14,    33,    56,    14,
       14,    14,    14,    14,    25,    33,    14,    41,    41,    36,
       14,    14,    14,    36,    25,    17,    25,    34,    34,    14,
-      33,    31,    42,    14,    14
+      33,    29,    42,    14,    14
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
@@ -1358,299 +1359,299 @@ yyreduce:
   case 2: /* ListNumber: Number  */
 #line 154 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                     { (yyval.listnumber_) = new ListNumber(); (yyval.listnumber_)->push_back((yyvsp[0]._number)); }
-#line 1362 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1363 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 3: /* ListNumber: Number _COMMA ListNumber  */
 #line 155 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                              { (yyvsp[0].listnumber_)->push_back((yyvsp[-2]._number)); (yyval.listnumber_) = (yyvsp[0].listnumber_); }
-#line 1368 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1369 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 4: /* TensorShape: _LBRACK _RBRACK  */
 #line 157 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                               { (yyval.tensorshape_) = new ScalarDims(); }
-#line 1374 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1375 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 5: /* TensorShape: _LBRACK ListNumber _RBRACK  */
 #line 158 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                { std::reverse((yyvsp[-1].listnumber_)->begin(),(yyvsp[-1].listnumber_)->end()) ;(yyval.tensorshape_) = new TensorDims((yyvsp[-1].listnumber_)); }
-#line 1380 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1381 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 6: /* ArithExpr: VariableName  */
 #line 160 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                          { (yyval.arithexpr_) = new ScalarVarExpr((yyvsp[0]._variablename)); }
-#line 1386 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1387 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 7: /* ArithExpr: VariableName _LBRACK ListNumber _RBRACK  */
 #line 161 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                             { std::reverse((yyvsp[-1].listnumber_)->begin(),(yyvsp[-1].listnumber_)->end()) ;(yyval.arithexpr_) = new TensorVarExpr((yyvsp[-3]._variablename), (yyvsp[-1].listnumber_)); }
-#line 1392 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1393 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 8: /* ArithExpr: Number  */
 #line 162 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
            { (yyval.arithexpr_) = new ValExpr((yyvsp[0]._number)); }
-#line 1398 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1399 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 9: /* ArithExpr: _LPAREN _MINUS ArithExpr _RPAREN  */
 #line 163 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                      { (yyval.arithexpr_) = new Negate((yyvsp[-1].arithexpr_)); }
-#line 1404 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1405 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 10: /* ArithExpr: _LPAREN _PLUS ListArithExpr _RPAREN  */
 #line 164 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { std::reverse((yyvsp[-1].listarithexpr_)->begin(),(yyvsp[-1].listarithexpr_)->end()) ;(yyval.arithexpr_) = new Plus((yyvsp[-1].listarithexpr_)); }
-#line 1410 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1411 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 11: /* ArithExpr: _LPAREN _MINUS ArithExpr ListArithExpr _RPAREN  */
 #line 165 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                    { std::reverse((yyvsp[-1].listarithexpr_)->begin(),(yyvsp[-1].listarithexpr_)->end()) ;(yyval.arithexpr_) = new Minus((yyvsp[-2].arithexpr_), (yyvsp[-1].listarithexpr_)); }
-#line 1416 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1417 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 12: /* ArithExpr: _LPAREN _STAR ListArithExpr _RPAREN  */
 #line 166 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { std::reverse((yyvsp[-1].listarithexpr_)->begin(),(yyvsp[-1].listarithexpr_)->end()) ;(yyval.arithexpr_) = new Multiply((yyvsp[-1].listarithexpr_)); }
-#line 1422 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1423 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 13: /* ListArithExpr: ArithExpr  */
 #line 168 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                           { (yyval.listarithexpr_) = new ListArithExpr(); (yyval.listarithexpr_)->push_back((yyvsp[0].arithexpr_)); }
-#line 1428 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1429 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 14: /* ListArithExpr: ArithExpr ListArithExpr  */
 #line 169 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                             { (yyvsp[0].listarithexpr_)->push_back((yyvsp[-1].arithexpr_)); (yyval.listarithexpr_) = (yyvsp[0].listarithexpr_); }
-#line 1434 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1435 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 15: /* BoolExpr: _LPAREN _GT ArithExpr ArithExpr _RPAREN  */
 #line 171 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                    { (yyval.boolexpr_) = new GreaterThan((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1440 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1441 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 16: /* BoolExpr: _LPAREN _LT ArithExpr ArithExpr _RPAREN  */
 #line 172 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                             { (yyval.boolexpr_) = new LessThan((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1446 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1447 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 17: /* BoolExpr: _LPAREN _GTEQ ArithExpr ArithExpr _RPAREN  */
 #line 173 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                               { (yyval.boolexpr_) = new GreaterEqual((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1452 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1453 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 18: /* BoolExpr: _LPAREN _LDARROW ArithExpr ArithExpr _RPAREN  */
 #line 174 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                  { (yyval.boolexpr_) = new LessEqual((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1458 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1459 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 19: /* BoolExpr: _LPAREN _BANGEQ ArithExpr ArithExpr _RPAREN  */
 #line 175 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                 { (yyval.boolexpr_) = new NotEqual((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1464 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1465 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 20: /* BoolExpr: _LPAREN _DEQ ArithExpr ArithExpr _RPAREN  */
 #line 176 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                              { (yyval.boolexpr_) = new Equal((yyvsp[-2].arithexpr_), (yyvsp[-1].arithexpr_)); }
-#line 1470 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1471 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 21: /* BoolExpr: _LPAREN _KW_and ListBoolExpr _RPAREN  */
 #line 177 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                          { std::reverse((yyvsp[-1].listboolexpr_)->begin(),(yyvsp[-1].listboolexpr_)->end()) ;(yyval.boolexpr_) = new And((yyvsp[-1].listboolexpr_)); }
-#line 1476 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1477 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 22: /* BoolExpr: _LPAREN _KW_or ListBoolExpr _RPAREN  */
 #line 178 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { std::reverse((yyvsp[-1].listboolexpr_)->begin(),(yyvsp[-1].listboolexpr_)->end()) ;(yyval.boolexpr_) = new Or((yyvsp[-1].listboolexpr_)); }
-#line 1482 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1483 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 23: /* ListBoolExpr: BoolExpr  */
 #line 180 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                         { (yyval.listboolexpr_) = new ListBoolExpr(); (yyval.listboolexpr_)->push_back((yyvsp[0].boolexpr_)); }
-#line 1488 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1489 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 24: /* ListBoolExpr: BoolExpr ListBoolExpr  */
 #line 181 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                           { (yyvsp[0].listboolexpr_)->push_back((yyvsp[-1].boolexpr_)); (yyval.listboolexpr_) = (yyvsp[0].listboolexpr_); }
-#line 1494 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1495 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 25: /* Assertion: _SYMB_14 BoolExpr _RPAREN  */
 #line 183 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                       { (yyval.assertion_) = new Assert((yyvsp[-1].boolexpr_)); }
-#line 1500 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1501 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 26: /* ListAssertion: Assertion  */
 #line 185 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                           { (yyval.listassertion_) = new ListAssertion(); (yyval.listassertion_)->push_back((yyvsp[0].assertion_)); }
-#line 1506 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1507 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 27: /* ListAssertion: Assertion ListAssertion  */
 #line 186 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                             { (yyvsp[0].listassertion_)->push_back((yyvsp[-1].assertion_)); (yyval.listassertion_) = (yyvsp[0].listassertion_); }
-#line 1512 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1513 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 28: /* ElementType: VariableName  */
 #line 188 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                            { (yyval.elementtype_) = new DType((yyvsp[0]._variablename)); }
-#line 1518 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1519 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
-  case 29: /* OnnxName: _STRING_  */
+  case 29: /* OnnxName: T_OnnxString  */
 #line 190 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
-                    { (yyval.onnxname_) = new NodeName((yyvsp[0]._string)); }
-#line 1524 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+                        { (yyval.onnxname_) = new NodeName((yyvsp[0]._string)); }
+#line 1525 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 30: /* InputDefinition: _SYMB_15 VariableName ElementType TensorShape _RPAREN  */
 #line 192 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                                         { (yyval.inputdefinition_) = new InputDef((yyvsp[-3]._variablename), (yyvsp[-2].elementtype_), (yyvsp[-1].tensorshape_)); }
-#line 1530 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1531 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 31: /* OutputDefinition: _SYMB_16 VariableName ElementType TensorShape _RPAREN  */
 #line 194 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                                          { (yyval.outputdefinition_) = new OutputDef((yyvsp[-3]._variablename), (yyvsp[-2].elementtype_), (yyvsp[-1].tensorshape_)); }
-#line 1536 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1537 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 32: /* HiddenDefinition: _SYMB_17 VariableName ElementType TensorShape OnnxName _RPAREN  */
 #line 196 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                                                   { (yyval.hiddendefinition_) = new HiddenDef((yyvsp[-4]._variablename), (yyvsp[-3].elementtype_), (yyvsp[-2].tensorshape_), (yyvsp[-1].onnxname_)); }
-#line 1542 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1543 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 33: /* ListInputDefinition: InputDefinition  */
 #line 198 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                       { (yyval.listinputdefinition_) = new ListInputDefinition(); (yyval.listinputdefinition_)->push_back((yyvsp[0].inputdefinition_)); }
-#line 1548 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1549 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 34: /* ListInputDefinition: InputDefinition ListInputDefinition  */
 #line 199 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { (yyvsp[0].listinputdefinition_)->push_back((yyvsp[-1].inputdefinition_)); (yyval.listinputdefinition_) = (yyvsp[0].listinputdefinition_); }
-#line 1554 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1555 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 35: /* ListHiddenDefinition: %empty  */
 #line 201 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                    { (yyval.listhiddendefinition_) = new ListHiddenDefinition(); }
-#line 1560 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1561 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 36: /* ListHiddenDefinition: ListHiddenDefinition HiddenDefinition  */
 #line 202 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                           { (yyvsp[-1].listhiddendefinition_)->push_back((yyvsp[0].hiddendefinition_)); (yyval.listhiddendefinition_) = (yyvsp[-1].listhiddendefinition_); }
-#line 1566 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1567 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 37: /* ListOutputDefinition: OutputDefinition  */
 #line 204 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { (yyval.listoutputdefinition_) = new ListOutputDefinition(); (yyval.listoutputdefinition_)->push_back((yyvsp[0].outputdefinition_)); }
-#line 1572 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1573 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 38: /* ListOutputDefinition: OutputDefinition ListOutputDefinition  */
 #line 205 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                           { (yyvsp[0].listoutputdefinition_)->push_back((yyvsp[-1].outputdefinition_)); (yyval.listoutputdefinition_) = (yyvsp[0].listoutputdefinition_); }
-#line 1578 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1579 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 39: /* NetworkEquivalence: _SYMB_18 VariableName _RPAREN  */
 #line 207 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                    { (yyval.networkequivalence_) = new IsomorphicTo((yyvsp[-1]._variablename)); }
-#line 1584 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1585 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 40: /* NetworkEquivalence: _SYMB_19 VariableName _RPAREN  */
 #line 208 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                   { (yyval.networkequivalence_) = new EqualTo((yyvsp[-1]._variablename)); }
-#line 1590 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1591 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 41: /* ListNetworkEquivalence: %empty  */
 #line 210 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                      { (yyval.listnetworkequivalence_) = new ListNetworkEquivalence(); }
-#line 1596 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1597 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 42: /* ListNetworkEquivalence: ListNetworkEquivalence NetworkEquivalence  */
 #line 211 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                               { (yyvsp[-1].listnetworkequivalence_)->push_back((yyvsp[0].networkequivalence_)); (yyval.listnetworkequivalence_) = (yyvsp[-1].listnetworkequivalence_); }
-#line 1602 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1603 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 43: /* NetworkDefinition: _SYMB_20 VariableName ListNetworkEquivalence ListInputDefinition ListHiddenDefinition ListOutputDefinition _RPAREN  */
 #line 213 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                                                                                                        { std::reverse((yyvsp[-3].listinputdefinition_)->begin(),(yyvsp[-3].listinputdefinition_)->end()) ; std::reverse((yyvsp[-1].listoutputdefinition_)->begin(),(yyvsp[-1].listoutputdefinition_)->end()) ;(yyval.networkdefinition_) = new NetworkDef((yyvsp[-5]._variablename), (yyvsp[-4].listnetworkequivalence_), (yyvsp[-3].listinputdefinition_), (yyvsp[-2].listhiddendefinition_), (yyvsp[-1].listoutputdefinition_)); }
-#line 1608 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1609 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 44: /* ListNetworkDefinition: NetworkDefinition  */
 #line 215 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                           { (yyval.listnetworkdefinition_) = new ListNetworkDefinition(); (yyval.listnetworkdefinition_)->push_back((yyvsp[0].networkdefinition_)); }
-#line 1614 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1615 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 45: /* ListNetworkDefinition: NetworkDefinition ListNetworkDefinition  */
 #line 216 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                             { (yyvsp[0].listnetworkdefinition_)->push_back((yyvsp[-1].networkdefinition_)); (yyval.listnetworkdefinition_) = (yyvsp[0].listnetworkdefinition_); }
-#line 1620 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1621 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 46: /* Version: _SYMB_21 VersionToken _RPAREN  */
 #line 218 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                         { (yyval.version_) = new VNNLibVersion((yyvsp[-1]._versiontoken)); }
-#line 1626 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1627 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 47: /* Query: Version ListNetworkDefinition ListAssertion  */
 #line 220 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                                                     { std::reverse((yyvsp[-1].listnetworkdefinition_)->begin(),(yyvsp[-1].listnetworkdefinition_)->end()) ; std::reverse((yyvsp[0].listassertion_)->begin(),(yyvsp[0].listassertion_)->end()) ;(yyval.query_) = new VNNLibQuery((yyvsp[-2].version_), (yyvsp[-1].listnetworkdefinition_), (yyvsp[0].listassertion_)); result->query_ = (yyval.query_); }
-#line 1632 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1633 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 48: /* VersionToken: T_VersionToken  */
 #line 222 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                               { (yyval._versiontoken) = new VersionToken((yyvsp[0]._string), (yyloc).first_line); }
-#line 1638 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1639 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 49: /* Number: T_Number  */
 #line 224 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                   { (yyval._number) = new Number((yyvsp[0]._string), (yyloc).first_line); }
-#line 1644 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1645 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
   case 50: /* VariableName: T_VariableName  */
 #line 226 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
                               { (yyval._variablename) = new VariableName((yyvsp[0]._string), (yyloc).first_line); }
-#line 1650 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1651 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
     break;
 
 
-#line 1654 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
+#line 1655 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/Parser.C"
 
       default: break;
     }

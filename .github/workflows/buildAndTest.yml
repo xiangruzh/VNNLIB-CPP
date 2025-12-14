@@ -7,7 +7,7 @@ on:
             - main
 
 jobs:
-    build-and-test:
+    build-and-test-linux:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -20,9 +20,65 @@ jobs:
                 echo "Building the parser"
                 mkdir -p build
                 cd build
-                cmake -DNO_BNFC=ON ..
+                cmake -DBNFC=OFF ..
                 make -j$(nproc)
                 echo "Build completed successfully"
+
+            - name: Test VNNLib files
+              run: |
+                echo "Testing VNNLib files"
+                cd build
+                for file in ../grammar/test/*.vnnlib; do
+                  echo "Testing $file"
+                  ../bin/VNNLibParser check "$file"
+                done
+                echo "All tests passed"
+
+    build-and-test-windows:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+              with:
+                submodules: recursive
+            
+            - name: Configure CMake
+              run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBNFC=OFF
+
+            - name: Build
+              run: cmake --build build --config Release
+
+            - name: Test VNNLib files
+              run: |
+                cd build
+                foreach ($file in Get-ChildItem ../grammar/test/*.vnnlib) {
+                  Write-Host "Testing $file"
+                  ../bin/Release/VNNLibParser.exe check $file.FullName
+                }
+                Write-Host "All tests passed"
+
+    build-and-test-macos:
+        runs-on: macos-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+              with:
+                submodules: recursive
+            
+            - name: Configure CMake
+              run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBNFC=OFF
+
+            - name: Build
+              run: cmake --build build --config Release
+
+            - name: Test VNNLib files
+              run: |
+                cd build
+                for file in ../grammar/test/*.vnnlib; do
+                  echo "Testing $file"
+                  ../bin/VNNLibParser check "$file"
+                done
+                echo "All tests passed"
 
     build-and-test-from-grammar:
         runs-on: ubuntu-latest
@@ -56,6 +112,16 @@ jobs:
                 echo "Building the parser"
                 mkdir -p build
                 cd build
-                cmake -DNO_BNFC=OFF ..
+                cmake -DBNFC=ON ..
                 make -j$(nproc)
                 echo "Build completed successfully"
+
+            - name: Test VNNLib files
+              run: |
+                echo "Testing VNNLib files"
+                cd build
+                for file in ../grammar/test/*.vnnlib; do
+                  echo "Testing $file"
+                  ../bin/VNNLibParser check "$file"
+                done
+                echo "All tests passed"

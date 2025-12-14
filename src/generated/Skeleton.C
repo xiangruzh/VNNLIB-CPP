@@ -214,7 +214,7 @@ void Skeleton::visitNodeName(NodeName *node_name)
 {
   /* Code For NodeName Goes Here */
 
-  visitString(node_name->string_);
+  visitOnnxString(node_name->onnxstring_);
 
 }
 
@@ -392,6 +392,11 @@ void Skeleton::visitString(String x)
 void Skeleton::visitIdent(Ident x)
 {
   /* Code for Ident Goes Here */
+}
+
+void Skeleton::visitOnnxString(OnnxString x)
+{
+  /* Code for OnnxString Goes Here */
 }
 
 

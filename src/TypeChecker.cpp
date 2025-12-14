@@ -433,7 +433,7 @@ void TypeChecker::visitHiddenDef(HiddenDef *p) {
     p->elementtype_->accept(this);
 
     NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
-    std::string onnxNameStr = onnxName->string_;
+    std::string onnxNameStr = onnxName->onnxstring_;
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
 
@@ -859,6 +859,7 @@ void TypeChecker::visitChar(Char x) {}
 void TypeChecker::visitDouble(Double x) {}
 void TypeChecker::visitString(String x) {}
 void TypeChecker::visitIdent(Ident x) {}
+void TypeChecker::visitOnnxString(OnnxString x) {}
 void TypeChecker::visitVariableName(VariableName *p) {}     // Token for variable names
 
 void TypeChecker::visitListNumber(ListNumber *p) {
