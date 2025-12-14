@@ -72,8 +72,7 @@ public:
     void visitDouble(Double x) override;
     void visitString(String x) override;
     void visitIdent(Ident x) override;
-    void visitOnnxString(OnnxString x) override;
-    void visitVariableName(VariableName *p) override;
+    void visitVariableName(VariableName *x) override;
     void visitNumber(Number *x) override;
     void visitVersionToken(VersionToken *x) override;
 
