@@ -14,12 +14,20 @@ Features include:
 
 ## Installation
 
-TODO
+You can either download the [latest release](https://github.com/VNNLIB/VNNLIB-CPP/releases) of the pre-built library or can follow the [CONTRIBUTING.md](https://github.com/VNNLIB/VNNLIB-CPP/blob/main/CONTRIBUTING.md) instructions
+to build from source. Note if doning the latter then you must follow the instructions
+to regenerate the parser if you are not on a Linux system.
 
 ## Basic Usage
 
 ```cpp
-TODO
+#include "VNNLib.h"
+
+TQuery* query = parseQueryFile(std::string path);
+
+for (auto assertion : query.assertions) {
+    ...
+}
 ```
 
 ## Version compatibility
