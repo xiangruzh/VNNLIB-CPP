@@ -79,10 +79,11 @@ extern int grammar_debug;
     _RBRACK = 280,                 /* _RBRACK  */
     _KW_and = 281,                 /* _KW_and  */
     _KW_or = 282,                  /* _KW_or  */
-    T_Number = 283,                /* T_Number  */
-    T_OnnxString = 284,            /* T_OnnxString  */
-    T_VariableName = 285,          /* T_VariableName  */
-    T_VersionToken = 286           /* T_VersionToken  */
+    T_Initialized = 283,           /* T_Initialized  */
+    T_Number = 284,                /* T_Number  */
+    T_OnnxString = 285,            /* T_OnnxString  */
+    T_VariableName = 286,          /* T_VariableName  */
+    T_VersionToken = 287           /* T_VersionToken  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -91,12 +92,13 @@ extern int grammar_debug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 50 "/home/allen/UWA/masters/geng5511/VNNLIB-CPP/src/generated/grammar.y"
+#line 52 "/home/matthew/Code/VNNLIB-CPP/src/generated/grammar.y"
 
   int    _int;
   char   _char;
   double _double;
   char*  _string;
+  Initialized* _initialized;
   VersionToken* _versiontoken;
   Number* _number;
   VariableName* _variablename;
@@ -110,6 +112,8 @@ union YYSTYPE
   ListAssertion* listassertion_;
   ElementType* elementtype_;
   OnnxName* onnxname_;
+  InputOption* inputoption_;
+  ListInputOption* listinputoption_;
   InputDefinition* inputdefinition_;
   OutputDefinition* outputdefinition_;
   HiddenDefinition* hiddendefinition_;
@@ -123,7 +127,7 @@ union YYSTYPE
   Version* version_;
   Query* query_;
 
-#line 127 "Bison.H"
+#line 131 "Bison.H"
 
 };
 typedef union YYSTYPE YYSTYPE;

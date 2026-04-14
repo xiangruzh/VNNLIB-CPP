@@ -40,7 +40,12 @@ public:
     void visitAssert(Assert* p) override;
 
     void visitInputDef(InputDef* p) override;
+    void visitInputOption(InputOption* p) override;
+    void visitInitializedOption(InitializedOption* p) override;
+    void visitListInputOption(ListInputOption* p) override;
+
     void visitHiddenDef(HiddenDef* p) override;
+    
     void visitOutputDef(OutputDef* p) override;
 
     void visitIsomorphicTo(IsomorphicTo *p) override;

@@ -56,7 +56,7 @@ if(BNFC)
     find_package(BISON REQUIRED)
     find_package(FLEX REQUIRED)
 
-    set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/grammar.cf)
+    set(BNFC_INPUT ${CMAKE_CURRENT_SOURCE_DIR}/grammar/syntax/grammar.cf)
 
     add_custom_command(
         OUTPUT

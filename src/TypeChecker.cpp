@@ -178,14 +178,14 @@ std::string Diagnostic::codeToString() const {
             case ErrorCode::VariableKindMismatch: return "VariableKindMismatch";
             case ErrorCode::MissingNetwork: return "MissingNetwork";
             case ErrorCode::ChainedEquivalence: return "ChainedEquivalence";
+            case ErrorCode::MultipleEquivalences: return "MultipleEquivalences";
+            case ErrorCode::MultipleInitialized: return "MultipleInitialized";
             case ErrorCode::UnknownType: return "UnknownType";
-            default: break;
         }
     } else if (severity_ == Severity::Warning) {
         auto wc = static_cast<WarningCode>(code_);
         switch (wc) {
             case WarningCode::MinorVersionMismatch: return "MinorVersionMismatch";
-            default: break;
         }
     }
     return "UnknownCode";
@@ -410,7 +410,7 @@ void TypeChecker::visitInputDef(InputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
+    p->listinputoption_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     // Set dims to an empty list if shape is null or shape->listnumber_ is null
@@ -424,13 +424,48 @@ void TypeChecker::visitInputDef(InputDef *p) {
     );
 }
 
+void TypeChecker::visitListInputOption(ListInputOption* listinputoption) {
+    int initialisedCount = 0;
+    int initialisedLine = -1;
+    
+    for (auto &inputOption : *listinputoption) {
+        if (auto initialisedOption = dynamic_cast<InitializedOption*>(inputOption)) {
+            initialisedCount++;
+            if (initialisedCount == 1) {
+                initialisedLine = initialisedOption->initialized_->integer_;
+            }
+        }
+        inputOption->accept(this);
+    }
+    
+    if (initialisedCount > 1) {
+        addDiagnostic(
+            Severity::Error,
+            static_cast<int>(ErrorCode::MultipleInitialized),
+            "Multiple `initialized` options found",
+            "initialized",
+            "At most one `initialized` option is allowed per input declaration",
+            initialisedLine
+        );
+    }
+}
+
+void TypeChecker::visitInputOption(InputOption* p) {} // abstract class
+
+void TypeChecker::visitInitializedOption(InitializedOption* p) {  
+    if (p && p->initialized_) {  
+        p->initialized_->accept(this);  
+    }  
+}
+
+void TypeChecker::visitInitialized(Initialized* p) {} // abstract class
+
 void TypeChecker::visitHiddenDefinition(HiddenDefinition *p) {} // abstract class
 
 void TypeChecker::visitHiddenDef(HiddenDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
 
     NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
     std::string onnxNameStr = onnxName->onnxstring_;
@@ -452,7 +487,6 @@ void TypeChecker::visitOutputDef(OutputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
