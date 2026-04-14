@@ -411,6 +411,7 @@ void TypeChecker::visitInputDef(InputDef *p) {
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
     p->elementtype_->accept(this);
+    p->listinputoption_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     // Set dims to an empty list if shape is null or shape->listnumber_ is null
@@ -423,6 +424,38 @@ void TypeChecker::visitInputDef(InputDef *p) {
         SymbolKind::Input
     );
 }
+
+void TypeChecker::visitListInputOption(ListInputOption* listinputoption) {
+    int initialisedCount = 0;
+    int initialisedLine = -1;
+    
+    for (auto &inputOption : *listinputoption) {
+        if (auto initialisedOption = dynamic_cast<InitializedOption*>(inputOption)) {
+            initialisedCount++;
+            if (initialisedCount == 1) {
+                initialisedLine = initialisedOption->initialized_->integer_;
+            }
+        }
+        inputOption->accept(this);
+    }
+    
+    if (initialisedCount > 1) {
+        addDiagnostic(
+            Severity::Error,
+            static_cast<int>(ErrorCode::MultipleDeclaration),
+            "Multiple `initialized` options found",
+            "Initialised",
+            "At most one `initialized` option is allowed per input declaration",
+            initialisedLine
+        );
+    }
+}
+
+void TypeChecker::visitInputOption(InputOption* p) {} // abstract class
+
+void TypeChecker::visitInitializedOption(InitializedOption* p) {}
+
+void TypeChecker::visitInitialized(Initialized* p) {} // abstract class
 
 void TypeChecker::visitHiddenDefinition(HiddenDefinition *p) {} // abstract class
 

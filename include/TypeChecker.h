@@ -39,6 +39,8 @@ enum class ErrorCode {
     VariableKindMismatch,
     MissingNetwork,
     ChainedEquivalence,
+    MultipleEquivalences,
+    MultipleInitialized,
     UnknownType,
 };
 
@@ -143,6 +145,10 @@ public:
     void visitElementType(ElementType *p) override;
     void visitOnnxName(OnnxName *p) override;
     void visitInputDefinition(InputDefinition *p) override;
+    void visitListInputOption(ListInputOption* p) override;
+    void visitInputOption(InputOption* p) override;
+    void visitInitializedOption(InitializedOption* p) override;
+    void visitInitialized(Initialized *p) override;
     void visitHiddenDefinition(HiddenDefinition *p) override;
     void visitOutputDefinition(OutputDefinition *p) override;
     void visitNetworkEquivalence(NetworkEquivalence *p) override;

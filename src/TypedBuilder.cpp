@@ -257,14 +257,20 @@ void TypedBuilder::visitInputDef(InputDef* p) {
     TypeChecker::visitInputDef(p);
 
     auto symbol = std::make_shared<SymbolInfo>(
-        p->variablename_->string_, mapDType(p->elementtype_), mapShape(p->tensorshape_), SymbolKind::Input, ""
+        p->variablename_->string_, 
+        mapDType(p->elementtype_), 
+        mapShape(p->tensorshape_), 
+        SymbolKind::Input, 
+        ""
     );
-    if (!netStack_.empty()) symbol->networkName = netStack_.back()->networkName;
+    if (!netStack_.empty()) 
+        symbol->networkName = netStack_.back()->networkName;
     symbolMap_[symbol->name] = symbol;
 
     auto node = std::make_unique<TInputDefinition>();
     node->symbol = std::move(symbol);
     node->src_InputDefinition = static_cast<InputDefinition*>(p);
+    node->initialized = p->listinputoption_->size() > 0;
 
     auto lastNetwork = netStack_.back();
     lastNetwork->inputs.push_back(std::move(node));
@@ -392,6 +398,18 @@ void TypedBuilder::visitListAssertion(ListAssertion *p) {
 
 void TypedBuilder::visitListInputDefinition(ListInputDefinition *p) {
     TypeChecker::visitListInputDefinition(p);
+}
+
+void TypedBuilder::visitListInputOption(ListInputOption* p) {
+    TypeChecker::visitListInputOption(p);
+};
+
+void TypedBuilder::visitInputOption(InputOption* p) {
+    TypeChecker::visitInputOption(p);
+}
+
+void TypedBuilder::visitInitializedOption(InitializedOption* p) {
+    TypeChecker::visitInitializedOption(p);
 }
 
 void TypedBuilder::visitListHiddenDefinition(ListHiddenDefinition *p) {
