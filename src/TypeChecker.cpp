@@ -178,14 +178,14 @@ std::string Diagnostic::codeToString() const {
             case ErrorCode::VariableKindMismatch: return "VariableKindMismatch";
             case ErrorCode::MissingNetwork: return "MissingNetwork";
             case ErrorCode::ChainedEquivalence: return "ChainedEquivalence";
+            case ErrorCode::MultipleEquivalences: return "MultipleEquivalences";
+            case ErrorCode::MultipleInitialized: return "MultipleInitialized";
             case ErrorCode::UnknownType: return "UnknownType";
-            default: break;
         }
     } else if (severity_ == Severity::Warning) {
         auto wc = static_cast<WarningCode>(code_);
         switch (wc) {
             case WarningCode::MinorVersionMismatch: return "MinorVersionMismatch";
-            default: break;
         }
     }
     return "UnknownCode";
