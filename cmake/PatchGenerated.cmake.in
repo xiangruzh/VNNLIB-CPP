@@ -31,6 +31,7 @@ if(EXISTS "${LEXER_C_FILE}")
 endif()
 
 # 4. Fix apparent bug in BNFC which generates `pQuery` rather than `psQuery` for the string.
+# When https://github.com/BNFC/bnfc/issues/559 is fixed then we can remove this.
 foreach(FILE_NAME "Parser.H" "grammar.y")
     set(FILE_PATH "@GENERATED_DIR@/${FILE_NAME}")
     if(EXISTS "${FILE_PATH}")
