@@ -29,3 +29,13 @@ if(EXISTS "${LEXER_C_FILE}")
         file(WRITE "${LEXER_C_FILE}" "${CONTENT}")
     endif()
 endif()
+
+# 4. Fix apparent bug in BNFC which generates `pQuery` rather than `psQuery` for the string.
+foreach(FILE_NAME "Parser.H" "grammar.y")
+    set(FILE_PATH "@GENERATED_DIR@/${FILE_NAME}")
+    if(EXISTS "${FILE_PATH}")
+        file(READ "${FILE_PATH}" CONTENT)
+        string(REPLACE "Query* pQuery(const char *str)" "Query* psQuery(const char *str)" CONTENT "${CONTENT}")
+        file(WRITE "${FILE_PATH}" "${CONTENT}")
+    endif()
+endforeach()

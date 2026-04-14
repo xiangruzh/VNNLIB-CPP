@@ -1,8 +1,5 @@
 #include "VNNLib.h"
 
-// Forward declaration
-extern Query* psQuery(const char *str);
-
 std::unique_ptr<TQuery> parseQueryFile(std::string path) {
     FILE *file = fopen(path.c_str(), "r");
     if (!file) {

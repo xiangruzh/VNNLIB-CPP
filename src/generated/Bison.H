@@ -92,7 +92,7 @@ extern int grammar_debug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 50 "/home/matthew/Code/VNNLIB-CPP/src/generated/grammar.y"
+#line 52 "/home/matthew/Code/VNNLIB-CPP/src/generated/grammar.y"
 
   int    _int;
   char   _char;
