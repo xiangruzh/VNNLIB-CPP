@@ -196,7 +196,7 @@ public:
 	std::shared_ptr<const SymbolInfo> symbol{};
 	void children(std::vector<const TNode*>& out) const override;
 	std::string toString() const override;
-	bool initialized;
+	bool initialized {false};
 protected:
 	InputDefinition* src_InputDefinition{nullptr};
 };

@@ -270,7 +270,14 @@ void TypedBuilder::visitInputDef(InputDef* p) {
     auto node = std::make_unique<TInputDefinition>();
     node->symbol = std::move(symbol);
     node->src_InputDefinition = static_cast<InputDefinition*>(p);
-    node->initialized = p->listinputoption_->size() > 0;
+
+    node->initialized = false;
+    for (auto opt : *p->listinputoption_) {
+        if (dynamic_cast<InitializedOption*>(opt) != nullptr) {
+            node->initialized = true;
+            break;
+        }
+    }
 
     auto lastNetwork = netStack_.back();
     lastNetwork->inputs.push_back(std::move(node));

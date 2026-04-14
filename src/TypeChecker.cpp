@@ -410,7 +410,6 @@ void TypeChecker::visitInputDef(InputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
     p->listinputoption_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
@@ -442,9 +441,9 @@ void TypeChecker::visitListInputOption(ListInputOption* listinputoption) {
     if (initialisedCount > 1) {
         addDiagnostic(
             Severity::Error,
-            static_cast<int>(ErrorCode::MultipleDeclaration),
+            static_cast<int>(ErrorCode::MultipleInitialized),
             "Multiple `initialized` options found",
-            "Initialised",
+            "initialized",
             "At most one `initialized` option is allowed per input declaration",
             initialisedLine
         );
@@ -453,7 +452,11 @@ void TypeChecker::visitListInputOption(ListInputOption* listinputoption) {
 
 void TypeChecker::visitInputOption(InputOption* p) {} // abstract class
 
-void TypeChecker::visitInitializedOption(InitializedOption* p) {}
+void TypeChecker::visitInitializedOption(InitializedOption* p) {  
+    if (p && p->initialized_) {  
+        p->initialized_->accept(this);  
+    }  
+}
 
 void TypeChecker::visitInitialized(Initialized* p) {} // abstract class
 
@@ -463,7 +466,6 @@ void TypeChecker::visitHiddenDef(HiddenDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
 
     NodeName *onnxName = dynamic_cast<NodeName*>(p->onnxname_);
     std::string onnxNameStr = onnxName->onnxstring_;
@@ -485,7 +487,6 @@ void TypeChecker::visitOutputDef(OutputDef *p) {
     visitVariableName(p->variablename_);
     p->elementtype_->accept(this);
     p->tensorshape_->accept(this);
-    p->elementtype_->accept(this);
 
     auto* shape = dynamic_cast<TensorDims*>(p->tensorshape_);
     ListNumber dims = (shape && shape->listnumber_) ? *shape->listnumber_ : ListNumber{};
