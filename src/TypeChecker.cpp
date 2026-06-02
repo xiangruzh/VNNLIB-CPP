@@ -6,7 +6,7 @@
 TDataType TypeChecker::mapDType(ElementType* e) {
     DType *dt = dynamic_cast<DType *>(e);
     std::string typeName = dt->variablename_->string_;
-    if (typeName == "real" || typeName == "Real") return TDataType::Real;
+    if (typeName == "real") return TDataType::Real;
     else if (typeName == "float16") return TDataType::F16;
     else if (typeName == "float32") return TDataType::F32;
     else if (typeName == "float64") return TDataType::F64;
